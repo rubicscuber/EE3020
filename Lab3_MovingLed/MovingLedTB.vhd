@@ -11,7 +11,7 @@ architecture Behavioral of MovingLedTB is
   ------------------------------------------
   --Component definition
   ------------------------------------------
-  entity MovingLed is
+  component MovingLed is
     port (
       leftButton  : in std_logic;
       rightButton : in std_logic;
@@ -24,14 +24,14 @@ architecture Behavioral of MovingLedTB is
 
       digits : out std_logic_vector(11 downto 0));
 
-  end MovingLed;
+  end component;
 
   ------------------------------------------
   --signals to connect to components
   ------------------------------------------
-  signal leftButton  : std_logic;
-  signal rightButton : std_logic;
-  signal resetButton : std_logic;
+  signal leftButton  : std_logic := '0';
+  signal rightButton : std_logic := '0';
+  signal resetButton : std_logic := '0';
   signal digits : std_logic_vector(11 downto 0);
 
  
@@ -55,17 +55,19 @@ begin
   --    wait for 5 ns; --100MHz clock
   --    clk <= not clk;
   --end process clkGen;
-------------------------input stimulus--------------------------
-	stimulus : process
+  ------------------------------------------
+  --input stimulus
+  ------------------------------------------
+  stimulus : process
 	begin
-    dataIn <= '0';
-    wait for 18 ms;
-    dataIn <= '1';
-    wait for 16 ms;
-		--test_loop : for k in 0 to  loop
-    --  inputs <= std_logic_vector(to_unsigned(k, 4)); --to_unsigned(integer, length)
-		--	wait for 1 ns;
-		--end loop test_loop;
+    resetButton <= '1';
+    wait for 1 ns;
+    resetButton <= '0';
+    wait for 1 ns;
+		test_loop : for k in 0 to 31 loop
+      leftButton <= not leftButton;
+			wait for 1 ns;
+		end loop test_loop;
 	wait;
 	end process;
 

@@ -2,9 +2,9 @@ GHDL=ghdl
 FLAGS="--std=08"
 
 all:
-	@$(GHDL) -a $(FLAGS) MovingLed.vhd
+	@$(GHDL) -a $(FLAGS) MovingLed.vhd MovingLedTB.vhd
 
-	#@$(GHDL) -e $(FLAGS) testbench
+	@$(GHDL) -e $(FLAGS) MovingLedTB
 
-	#@$(GHDL) -r $(FLAGS) testbench --wave=DigitSelector.ghw --stop-time=34ms
+	@$(GHDL) -r $(FLAGS) MovingLedTB --wave=MovingLedWave.ghw --stop-time=4us
 
