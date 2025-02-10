@@ -24,8 +24,7 @@ architecture Behavioral of SevenSegmentTB is
 begin
   ------------instantiatine components within design-------------
   --component_pin => tb_signal,
-  UUT : SevenSegment
-  port map(
+  UUT : SevenSegment port map(
     segNumLeds  => numLeds,
     cathodes => cathodes);
 

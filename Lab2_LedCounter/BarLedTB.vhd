@@ -31,8 +31,7 @@ architecture Behavioral of BarLedTB is
 begin
   ------------instantiatine components within design-------------
   --component_pin => tb_signal,
-  UUT : BarLed
-  port map(
+  UUT : BarLed port map(
     numLeds    =>  inputs(2 downto 0),
     leftLedEN  =>  inputs(3),
     rightLedEN =>  inputs(4),
