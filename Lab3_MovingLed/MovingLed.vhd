@@ -8,36 +8,45 @@ entity MovingLed is
     rightButton : in std_logic;
     resetButton : in std_logic;
 
-    --digits (11 downto 8) will represent a hex number (seg[3])
+    --digits (11 downto 8) represent a hex number (seg[3])
     --seg[3] is blank
     --digits (7 downto 4) will be the tens place (seg[1])
     --digits (3 donwto 0) will be the ones place (seg[0])
-
-    digits : out std_logic_vector(11 downto 0));
+    digits : out std_logic_vector(11 downto 0);
+    position: out std_logic_vector(3 downto 0));
 
 end MovingLed;
 
 architecture MovingLed_ARCH of MovingLed is
 
-  signal currentPosition : unsigned(3 downto 0) := "0000";
+  signal currentPosition : unsigned(3 downto 0);
   constant ACTIVE : std_logic := '1';
 
 begin
-
+  
+  --------------------------------------------
+  --This process keeps track of the leds position and 
+  --then turns that position into a binary number
+  --position output will send the binary number to the BarLedDriver module
+  --------------------------------------------
   MoveAround: process(leftButton, rightButton, resetButton)
   begin
-      if resetButton = ACTIVE then
-        currentPosition <= (others => '0');
-      elsif rising_edge(leftButton) and (currentPosition /= 15) then
-        currentPosition <= currentPosition + 1;
-      elsif rising_edge(rightButton) and (currentPosition /= 0) then
-        currentPosition <= currentPosition -1;
-      else
-        currentPosition <= (others => '0');
-      end if;
+    if resetButton = ACTIVE then
+      currentPosition <= (others => '0');
+    elsif rising_edge(leftButton) and (currentPosition /= 15) then
+      currentPosition <= currentPosition + 1;
+    elsif rising_edge(rightButton) and (currentPosition /= 0) then
+      currentPosition <= currentPosition - 1;
+    end if;
   end process MoveAround; 
-  
-  --this will be a hex number into the display module, no decoding for this
+  position <= std_logic_vector(currentPosition);
+
+  --------------------------------------------
+  --split and decode section for currentPosition
+  --this section splits apart the digit buss
+  --digits(11 downto 8) will be decoded into hex directly by the sevenSeg driver
+  --digits(7 downto 0) must be decoded first then sent to the devenSeg driver
+  --------------------------------------------
   digits(11 downto 8) <= std_logic_vector(currentPosition); 
 
   --splitter for tens and ones place (0xA = 0b0001 0000 = 10)

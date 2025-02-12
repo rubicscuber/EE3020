@@ -24,15 +24,12 @@ architecture behavioral  of SwitchLed_Basys3TB is
   -----------------------------------------------
   --Create TB signals
   -----------------------------------------------
-  signal sw   : std_logic_vector(2 downto 0);
-  signal btnL : std_logic;
-  signal btnR : std_logic;
+  signal inputBus : std_logic_vector(4 downto 0) := "00000";
 
   signal led : std_logic_vector(15 downto 0);
   signal an  : std_logic_vector(3 downto 0);
   signal seg : std_logic_vector(6 downto 0);
 
-  signal inputBus : std_logic_vector(4 downto 0) := "00000";
 
 begin
 
@@ -41,9 +38,9 @@ begin
   --component => signal,
   -----------------------------------------------
   UUT : SwitchLed_Basys3 port map(
-    sw   => sw,
-    btnL => btnL,
-    btnR => btnR,
+    sw   => inputBus(2 downto 0),
+    btnL => inputBus(3),
+    btnR => inputBus(4),
 
     led => led,
     an  => an,
@@ -52,10 +49,11 @@ begin
   -----------------------------------------------
   --Assign inputBus to internal signals
   --for readablilty in the waveform viewer
+  --pro tip dont do this, it leads to messy meta values
   -----------------------------------------------
-  sw <= inputBus(2 downto 0);
-  btnL <= inputBus(3);
-  btnR <= inputBus(4);
+  --sw <= inputBus(2 downto 0);
+  --btnL <= inputBus(3);
+  --btnR <= inputBus(4);
 
   -----------------------------------------------
   --Main stimulus process to make all possible values

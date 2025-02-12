@@ -22,8 +22,8 @@ architecture Behavioral of MovingLedTB is
       --digits (7 downto 4) will be the tens place (seg[1])
       --digits (3 donwto 0) will be the ones place (seg[0])
 
-      digits : out std_logic_vector(11 downto 0));
-
+      digits : out std_logic_vector(11 downto 0);
+      position: out std_logic_vector(3 downto 0));
   end component;
 
   ------------------------------------------
@@ -32,8 +32,9 @@ architecture Behavioral of MovingLedTB is
   signal leftButton  : std_logic := '0';
   signal rightButton : std_logic := '0';
   signal resetButton : std_logic := '0';
-  signal digits : std_logic_vector(11 downto 0);
 
+  signal digits : std_logic_vector(11 downto 0);
+  signal position : std_logic_vector(3 downto 0);
  
 begin
 
@@ -45,7 +46,8 @@ begin
     leftButton  => leftButton, 
     rightButton => rightButton,
     resetButton => resetButton,
-    digits => digits);
+    digits => digits,
+    position => position);
 
   ------------------------------------------
   --clockgen process
@@ -60,14 +62,31 @@ begin
   ------------------------------------------
   stimulus : process
 	begin
-    resetButton <= '1';
+    resetButton <= '1'; --anctuate reset switch
     wait for 1 ns;
     resetButton <= '0';
     wait for 1 ns;
-		test_loop : for k in 0 to 31 loop
+
+		moveLeft : for k in 0 to 31 loop
       leftButton <= not leftButton;
 			wait for 1 ns;
-		end loop test_loop;
+		end loop moveLeft;
+
+    resetButton <= '1'; --anctuate reset switch
+    wait for 1 ns;
+    resetButton <= '0';
+    wait for 1 ns;
+
+		moveRight : for k in 0 to 31 loop
+      rightButton <= not rightButton;
+			wait for 1 ns;
+    end loop moveRight;
+
+		moveLeftAgain : for k in 0 to 31 loop
+      leftButton <= not leftButton;
+			wait for 1 ns;
+		end loop moveLeftAgain;
+
 	wait;
 	end process;
 
