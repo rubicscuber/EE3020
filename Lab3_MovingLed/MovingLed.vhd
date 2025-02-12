@@ -17,7 +17,8 @@ entity MovingLed is
   port (
     leftButton  : in std_logic;
     rightButton : in std_logic;
-    resetButton : in std_logic
+    resetButton : in std_logic;
+    position    : out std_logic_vector(3 downto 0)
   );
 end MovingLed;
 

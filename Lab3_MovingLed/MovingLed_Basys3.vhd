@@ -33,7 +33,19 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
     port (
       leftButton  : in std_logic;
       rightButton : in std_logic;
-      resetButton : in std_logic
+      resetButton : in std_logic;
+      position : out std_logic_vector(3 downto 0)
+    );
+  end component;
+
+  component DigitSplitter is
+    port (
+      position: in std_logic_vector(3 downto 0);
+      --digits (11 downto 8) represent a hex number (seg[3])
+      --seg[3] is blank
+      --digits (7 downto 4) will be the tens place (seg[1])
+      --digits (3 donwto 0) will be the ones place (seg[0])
+      digits  : out std_logic_vector(11 downto 0)
     );
   end component;
 
@@ -79,16 +91,22 @@ begin
     leftButton => btnL,
     rightButton=> btnR,
     resetButton => btnC,
+    position => positionSignal
+  );
+
+  DigitSplitterComponent : DigitSplitter port map(
+    position => positionSignal,
     digits(11 downto 8) => digit3Signal,
     digits(7 downto 4) => digit1Signal,
-    digits(3 downto 0) => digit0Signal,
-    position => positionSignal);
+    digits(3 downto 0) => digit0Signal
+  );
 
-    BarLedDriverComponent : BarLedDriver port map(
+  BarLedDriverComponent : BarLedDriver port map(
     position => positionSignal,
-    bar => led);
+    bar => led
+  );
 
-  SevenSegmentDriverComponent : SevenSegmentDriver port map(
+  SevenSegmentDriverComponent : SevenSegmentDriver port map( --error unbound
     reset => btnC,
     clock => clk,
 
@@ -97,12 +115,13 @@ begin
     digit1 => digit1Signal,
     digit0 => digit0Signal,
 
-    blank3 => not ACTIVE,
-    blank2 => ACTIVE,
-    blank1 => not ACTIVE,
-    blank0 => not ACTIVE,
+    blank3 => (not ACTIVE),
+    blank2 => (ACTIVE),
+    blank1 => (not ACTIVE),
+    blank0 => (not ACTIVE),
 
     sevenSegs => seg,
-    anodes => an);
+    anodes => an
+  );
 
 end architecture MovingLed_Basys3_ARCH;

@@ -14,12 +14,12 @@ use IEEE.numeric_std.all;
 
 entity DigitSplitter is
   port (
-    position: in std_logic_vector(3 downto 0));
+    position: in std_logic_vector(3 downto 0);
     --digits (11 downto 8) represent a hex number (seg[3])
     --seg[3] is blank
     --digits (7 downto 4) will be the tens place (seg[1])
     --digits (3 donwto 0) will be the ones place (seg[0])
-    digits  : out std_logic_vector(11 downto 0);
+    digits  : out std_logic_vector(11 downto 0)
   );
 end entity DigitSplitter;
 
