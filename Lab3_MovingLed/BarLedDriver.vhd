@@ -2,6 +2,17 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+------------------------------------------------------------
+--Title: Lab_3_MovingLed
+--Name: Nathaniel Roberts
+--Date: 
+--Prof: Scott Tippens
+--Desc: 
+--      
+--      
+--      
+------------------------------------------------------------
+
 entity BarLedDriver is
   port (
     position : in std_logic_vector(3 downto 0);

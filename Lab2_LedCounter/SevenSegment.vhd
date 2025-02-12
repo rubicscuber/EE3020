@@ -2,6 +2,16 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+------------------------------------------------------------
+--Title: Lab_2_SwitchLed
+--Name: Nathaniel Roberts
+--Date: 2/12/25
+--Prof: Scott Tippens
+--Desc: This module takes a binary value of switches and 
+--      write that value into a SevenSegment bus
+--      the top module handles the annodes
+------------------------------------------------------------
+
 entity SevenSegment is
   port (
     segNumLeds : in std_logic_vector(2 downto 0);

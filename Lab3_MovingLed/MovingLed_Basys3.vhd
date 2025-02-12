@@ -2,6 +2,17 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+------------------------------------------------------------
+--Title: Lab_3_MovingLed
+--Name: Nathaniel Roberts
+--Date: 
+--Prof: Scott Tippens
+--Desc: 
+--      
+--      
+--      
+------------------------------------------------------------
+--todo New module added called DigitSplitter, modify code to accomidate
 entity MovingLed_Basys3 is
   port(
     btnL : in std_logic;
@@ -22,14 +33,7 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
     port (
       leftButton  : in std_logic;
       rightButton : in std_logic;
-      resetButton : in std_logic;
-
-      --digits (11 downto 8) will represent a hex number (seg[3])
-      --seg[3] is blank
-      --digits (7 downto 4) will be the tens place (seg[1])
-      --digits (3 donwto 0) will be the ones place (seg[0])
-      digits : out std_logic_vector(11 downto 0);
-      position: out std_logic_vector(3 downto 0)
+      resetButton : in std_logic
     );
   end component;
 
