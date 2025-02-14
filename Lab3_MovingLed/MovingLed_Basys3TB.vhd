@@ -19,32 +19,61 @@ architecture MovingLed_Basys3TB_ARCH of MovingLed_Basys3TB is
     );
   end component;
 
-  signal inputs : std_logic_vector(3 downto 0);
+  signal btnL : std_logic := '0';
+  signal btnR : std_logic := '0';
+  signal btnC : std_logic := '0';
+  signal clock : std_logic := '0';
 
   signal an  : std_logic_vector(3 downto 0);
   signal seg : std_logic_vector(6 downto 0);
   signal led : std_logic_vector(15 downto 0);
+  
 
 begin
 
   UUT : MovingLed_Basys3 port map(
-    btnL => inputs(3),
-    btnR => inputs(2),
-    btnC => inputs(1),
-    clk  => inputs(0),
+    btnL => btnL,
+    btnR => btnR,
+    btnC => btnC,
+    clk => clock,
 
     an => an,
     seg => seg,
     led => led
   );
+  clockgen : process
+  begin
+    clock <= not clock;
+    wait for 5 ns;
+  end process clockgen;
 
   stimulus : process
-  begin
-    for k in 0 to 15 loop
-      inputs <= std_logic_vector(to_unsigned(k, 4));
-      wait for 1 ns;
-      end loop;
-  wait;
-  end process;
+	begin
+    btnC <= '1'; --anctuate reset switch
+    wait for 1 us;
+    btnC <= '0';
+    wait for 1 us;
 
+		moveLeft : for k in 0 to 31 loop --move left
+      btnL <= not btnL;
+			wait for 1 us;
+		end loop moveLeft;
+
+    btnC <= '1'; --anctuate reset switch
+    wait for 1 us;
+    btnC <= '0';
+    wait for 1 us;
+
+		moveRight : for k in 0 to 31 loop --move right
+      btnR <= not btnR;
+			wait for 1 us;
+    end loop moveRight;
+
+		moveLeftAgain : for k in 0 to 31 loop --move left
+      btnL <= not btnL;
+			wait for 1 us;
+		end loop moveLeftAgain;
+
+	wait;
+	end process;
 end architecture MovingLed_Basys3TB_ARCH;

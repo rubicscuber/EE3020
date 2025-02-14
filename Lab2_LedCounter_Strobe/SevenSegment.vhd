@@ -31,8 +31,7 @@ begin
               "0011001" when count = 4 else
               "0010010" when count = 5 else
               "0000010" when count = 6 else
-              "1111000" when count = 7 else
-              (others => '0');
+              "1111000" when count = 7;
 
 
 

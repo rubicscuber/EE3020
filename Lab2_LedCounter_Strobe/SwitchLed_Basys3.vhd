@@ -2,21 +2,12 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-------------------------------------------------------------
---Title: Lab_2_SwitchLed
---Name: Nathaniel Roberts
---Date: 2/12/25
---Prof: Scott Tippens
---Desc: Wrapper file for hardware. The two components BarLed
---      and SevenSegment are imported and connected together
---      to each other and hardware.
-------------------------------------------------------------
-
 entity SwitchLed_Basys3 is
     port(
       sw   : in std_logic_vector(2 downto 0);
       btnL : in std_logic;
       btnR : in std_logic;
+      clk  : in std_logic;
 
       led : out std_logic_vector(15 downto 0);
       an  : out std_logic_vector(3 downto 0);
@@ -25,11 +16,12 @@ entity SwitchLed_Basys3 is
 
 architecture SwitchLed_Basys3_ARCH of SwitchLed_Basys3 is
 
-  component BarLed is
+  component BarLedStrobe is
     port (
       numLeds     : in std_logic_vector(2 downto 0);
       leftLedEN   : in std_logic;
       rightLedEN  : in std_logic;
+      clock       : in std_logic;
 
       leftLeds    : out std_logic_vector(6 downto 0);
       rightLeds   : out std_logic_vector(6 downto 0)
@@ -45,18 +37,19 @@ architecture SwitchLed_Basys3_ARCH of SwitchLed_Basys3 is
 
 begin
 
-  an <= "1110"; --annodes 3, 2 and 1 are unused;
-  led(8 downto 7) <= "00"; -- the two center leds are unused
+  an <= "1110";
+  led(8 downto 7) <= "00";
 
-  BAR_LED: BarLed port map(
+  BarLedComponent : BarLedStrobe port map(
     numLeds    => sw,
     leftLedEN  => btnL,
     rightLedEN => btnR,
+    clock => clk,
 
     leftLeds   => led(15 downto 9),
     rightLeds  => led(6 downto 0));
 
-  SEVEN_SEGMENT: SevenSegment port map(
+  SevenSegmentComponent : SevenSegment port map(
     segNumLeds => sw,
     cathodes => seg);
 

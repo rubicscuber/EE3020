@@ -34,6 +34,7 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
       leftButton  : in std_logic;
       rightButton : in std_logic;
       resetButton : in std_logic;
+
       position : out std_logic_vector(3 downto 0)
     );
   end component;
@@ -91,6 +92,7 @@ begin
     leftButton => btnL,
     rightButton=> btnR,
     resetButton => btnC,
+
     position => positionSignal
   );
 

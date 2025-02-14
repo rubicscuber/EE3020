@@ -28,47 +28,47 @@ architecture BarLed_ARCH of BarLed is
 
 begin
 
-------------------------------------------------------------
--- Main process block, grab the value of the input switches
--- and assign signals to the led bus in a loop
-------------------------------------------------------------
-BarLightProc: process(numLeds, leftLedEN, rightLedEN)
-  variable counter : integer range 0 to 7;
-begin
-  counter := to_integer(unsigned(numLeds));
+  ------------------------------------------------------------
+  -- Main process block, grab the value of the input switches
+  -- and assign signals to the led bus in a loop
+  ------------------------------------------------------------
+  BarLightProc: process(numLeds, leftLedEN, rightLedEN)
+    variable counter : integer range 0 to 7;
+  begin
+    counter := to_integer(unsigned(numLeds));
 
------------------------------------ Left leds
-  if leftLedEN = '1' then
-    for ii in 0 to 6 loop
-      if counter = 0 then
+  ----------------------------------- Left leds
+    if leftLedEN = '1' then
+      for ii in 0 to 6 loop
+        if counter = 0 then
+          leftLeds <= (others => '0');
+        elsif ii < counter then
+          leftLeds(6 - ii) <= '1';
+        elsif ii >= counter then
+          leftLeds(6 - ii) <= '0';
+        else
+          leftLeds <= (others => '0');
+        end if;
+      end loop;
+    else
         leftLeds <= (others => '0');
-      elsif ii < counter then
-        leftLeds(6 - ii) <= '1';
-      elsif ii >= counter then
-        leftLeds(6 - ii) <= '0';
-      else
-        leftLeds <= (others => '0');
-      end if;
-    end loop;
-  else
-      leftLeds <= (others => '0');
-  end if;
------------------------------------ Right leds
-  if rightLedEN = '1' then
-    for jj in 0 to 6 loop
-      if counter = 0 then
+    end if;
+  ----------------------------------- Right leds
+    if rightLedEN = '1' then
+      for jj in 0 to 6 loop
+        if counter = 0 then
+          rightLeds <= (others => '0');
+        elsif jj < counter then
+          rightLeds(jj) <= '1';
+        elsif jj >= counter then
+          rightLeds(jj) <= '0';
+        else
+          rightLeds <= (others => '0');
+        end if;
+      end loop;
+    else
         rightLeds <= (others => '0');
-      elsif jj < counter then
-        rightLeds(jj) <= '1';
-      elsif jj >= counter then
-        rightLeds(jj) <= '0';
-      else
-        rightLeds <= (others => '0');
-      end if;
-    end loop;
-  else
-      rightLeds <= (others => '0');
-  end if;
-end process BarLightProc; 
+    end if;
+  end process BarLightProc; 
   
 end architecture BarLed_ARCH;
