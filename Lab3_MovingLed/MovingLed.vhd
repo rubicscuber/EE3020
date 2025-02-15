@@ -29,15 +29,21 @@ architecture MovingLed_ARCH of MovingLed is
   signal currentPosition : integer range 0 to 15;
   signal Left : std_logic;
   signal Right: std_logic;
+  signal moveClock : std_logic;
 
   --signals for solution 2--
-  --constant ACTIVE : std_logic := '0';
-  --signal moveClock : std_logic;
-  --signal currentPosition : integer range 0 to 15;
+--  signal currentPosition : integer range 0 to 15;
+--  signal Left : std_logic;
+--  signal Right: std_logic;
+
+  --signals for solution 3--
+--  constant ACTIVE : std_logic := '0';
+--  signal moveClock : std_logic;
+--  signal currentPosition : integer range 0 to 15;
 
 begin
 
-  --solution 1
+--solution 1
   moveLeft : process(leftButton)
   begin
     Left <= '0';
@@ -53,20 +59,53 @@ begin
       Right <= '1';
     end if;
   end process;
-
-  resolve : process(Left, Right, resetButton)
+  moveClock <= Left or Right;
+  resolve : process(moveClock, resetButton)
   begin
     if resetButton = '0' then
       currentPosition <= 0;
-    elsif (Left = '1') and (Right = '0') and (currentPosition < 15) then
-      currentPosition <= currentPosition + 1;
-    elsif (Left = '0') and (Right = '1') and (currentPosition > 0) then
-      currentPosition <= currentPosition - 1;
+    elsif (currentPosition > 0) or (currentPosition < 15) then
+      if rising_edge(moveClock) then
+        if (Left = '0') and (Right = '1') then
+          currentPosition <= currentPosition + 1;
+        elsif (Left = '1') and (Right = '0') then
+          currentPosition <= currentPosition - 1;
+        end if;
+      end if;
     end if;
     position <= std_logic_vector(to_unsigned(currentPosition, 4));
   end process;
 
- --solution 2
+  --solution 2--
+--  moveLeft : process(leftButton)
+--  begin
+--    Left <= '0';
+--    if falling_edge(leftButton) then
+--      Left <= '1';
+--    end if;
+--  end process;
+--
+--  moveRight : process(rightButton)
+--  begin
+--    Right <= '0';
+--    if falling_edge(rightButton) then
+--      Right <= '1';
+--    end if;
+--  end process;
+--
+--  resolve : process(Left, Right, resetButton)
+--  begin
+--    if resetButton = '0' then
+--      currentPosition <= 0;
+--    elsif (Left = '1') and (Right = '0') and (currentPosition < 15) then
+--      currentPosition <= currentPosition + 1;
+--    elsif (Left = '0') and (Right = '1') and (currentPosition > 0) then
+--      currentPosition <= currentPosition - 1;
+--    end if;
+--    position <= std_logic_vector(to_unsigned(currentPosition, 4));
+--  end process;
+
+  --solution 3--
 --  moveClock <= leftButton nand rightButton;
 --  MOVE_AROUND: process(moveClock, resetButton) 
 --  begin
