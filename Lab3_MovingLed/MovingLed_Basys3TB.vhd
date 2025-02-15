@@ -74,6 +74,12 @@ begin
 			wait for 1 us;
 		end loop moveLeftAgain;
 
+    moveRightAgain : for k in 0 to 31 loop --move right
+      btnR <= not btnR;
+      wait for 1 us;
+    end loop moveRightAgain;
+
+
 	wait;
 	end process;
 end architecture MovingLed_Basys3TB_ARCH;

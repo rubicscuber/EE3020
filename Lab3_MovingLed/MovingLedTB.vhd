@@ -52,7 +52,7 @@ begin
   ------------------------------------------
   stimulus : process
 	begin
-    resetButton <= '1'; --anctuate reset switch
+    resetButton <= '1'; --actuate reset switch
     wait for 1 ns;
     resetButton <= '0';
     wait for 1 ns;
@@ -62,7 +62,7 @@ begin
 			wait for 1 ns;
 		end loop moveLeft;
 
-    resetButton <= '1'; --anctuate reset switch
+    resetButton <= '1'; --actuate reset switch
     wait for 1 ns;
     resetButton <= '0';
     wait for 1 ns;

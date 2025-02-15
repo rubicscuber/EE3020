@@ -12,11 +12,10 @@ use IEEE.numeric_std.all;
 --      
 --      
 ------------------------------------------------------------
---todo New module added called DigitSplitter, modify code to accomidate
 entity MovingLed_Basys3 is
   port(
     btnL : in std_logic;
-    btnR : in std_logic;
+    --btnR : in std_logic;
     btnC : in std_logic;
     clk  : in std_logic;
 
@@ -32,7 +31,7 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
   component MovingLed is
     port (
       leftButton  : in std_logic;
-      rightButton : in std_logic;
+      --rightButton : in std_logic;
       resetButton : in std_logic;
 
       position : out std_logic_vector(3 downto 0)
@@ -89,8 +88,8 @@ begin
   digit2Signal <= "0000"; --the unused digit on the seven seg display
 
   MOVE_LED : MovingLed port map(
-    leftButton => btnL,
-    rightButton=> btnR,
+    leftButton => btnL, 
+    --rightButton=> btnR,
     resetButton => btnC,
 
     position => positionSignal

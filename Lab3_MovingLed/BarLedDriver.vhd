@@ -25,7 +25,7 @@ begin
 barLeds: process(position)
   begin
     barLoop : for k in 0 to 15 loop
-      if to_integer(unsigned(position)) >= k then
+      if to_integer(unsigned(position)) = k then
         bar(k) <= '1';
       else 
         bar(k) <= '0';
