@@ -38,7 +38,7 @@ architecture SwitchLed_Basys3_ARCH of SwitchLed_Basys3 is
 
   component SevenSegment is
     port (
-      segNumLeds : in std_logic_vector(2 downto 0);
+      numLeds : in std_logic_vector(2 downto 0);
       cathodes : out std_logic_vector(6 downto 0)
     );
   end component;
@@ -48,7 +48,7 @@ begin
   an <= "1110"; --annodes 3, 2 and 1 are unused;
   led(8 downto 7) <= "00"; -- the two center leds are unused
 
-  BAR_LED: BarLed port map(
+  LED_DRIVER: BarLed port map(
     numLeds    => sw,
     leftLedEN  => btnL,
     rightLedEN => btnR,
@@ -56,8 +56,8 @@ begin
     leftLeds   => led(15 downto 9),
     rightLeds  => led(6 downto 0));
 
-  SEVEN_SEGMENT: SevenSegment port map(
-    segNumLeds => sw,
+  SEGMENT_DRIVER: SevenSegment port map(
+    numLeds => sw,
     cathodes => seg);
 
 end architecture SwitchLed_Basys3_ARCH ;

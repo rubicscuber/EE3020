@@ -11,7 +11,7 @@ architecture Behavioral of SevenSegmentTB is
   ---------------------Component declerations---------------------
   component SevenSegment is
     port (
-      segNumLeds : in std_logic_vector(2 downto 0);
+      numLeds : in std_logic_vector(2 downto 0);
       cathodes : out std_logic_vector(6 downto 0)
     );
   end component;
@@ -25,7 +25,7 @@ begin
   ------------instantiatine components within design-------------
   --component_pin => tb_signal,
   UUT : SevenSegment port map(
-    segNumLeds  => numLeds,
+    numLeds  => numLeds,
     cathodes => cathodes);
 
   --------------------clockgen process--------------------------

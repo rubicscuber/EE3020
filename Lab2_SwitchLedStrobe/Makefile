@@ -12,6 +12,6 @@ all:
 
 	#@$(GHDL) -r $(FLAGS) SevenSegmentTB --wave=SevenSegmentWave.ghw --stop-time=1us
 	#@$(GHDL) -r $(FLAGS) BarLedStrobeTB --wave=BarLedStrobeWave.ghw --stop-time=1us
-	@$(GHDL) -r $(FLAGS) SwitchLed_Basys3TB --wave=SwitchLedWrapperWave.ghw --stop-time=250ms
+	@$(GHDL) -r $(FLAGS) SwitchLed_Basys3TB --wave=SwitchLedWrapperWave.ghw --stop-time=256us
 
 

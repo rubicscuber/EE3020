@@ -74,7 +74,7 @@ begin
     --wait for 1 ms;
     test_loop : for i in 0 to 31 loop
       inputBus <= std_logic_vector(to_unsigned(i, 5));
-      wait for 500 ns;
+      wait for 5 us;
     end loop;
   wait;
   end process;

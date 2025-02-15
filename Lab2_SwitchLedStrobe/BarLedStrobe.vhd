@@ -26,6 +26,7 @@ architecture BarLedStrobe_ARCH of BarLedStrobe is
   signal leftLedBusEN : std_logic_vector(6 downto 0);
   signal rightLedBusEN : std_logic_vector(6 downto 0);
   signal strobe : integer range 0 to 6;
+  constant PULSE_COUNT : integer := (100000000/20 - 1);
 begin
 
   ------------------------------------------------------------
@@ -33,11 +34,11 @@ begin
   --for a more interesting visual
   ------------------------------------------------------------
   Clock4Hz: process(clock)
-    variable clkCount : integer range 0 to (12500000 + 1);
+    variable clkCount : integer range 0 to (PULSE_COUNT);
     --variable clkCount : integer range 0 to (10 + 1);
   begin
     if rising_edge(clock) then
-      if clkCount = 12500000 + 1 then
+      if clkCount = PULSE_COUNT then
       --if clkCount = 10 + 1 then
         if strobe < 6 then
           strobe <= strobe + 1;

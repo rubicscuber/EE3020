@@ -88,7 +88,7 @@ begin
     
   digit2Signal <= "0000"; --the unused digit on the seven seg display
 
-  MovingLedComponent : MovingLed port map(
+  MOVE_LED : MovingLed port map(
     leftButton => btnL,
     rightButton=> btnR,
     resetButton => btnC,
@@ -96,19 +96,19 @@ begin
     position => positionSignal
   );
 
-  DigitSplitterComponent : DigitSplitter port map(
+  DIGIT_SPLITTER : DigitSplitter port map(
     position => positionSignal,
     digits(11 downto 8) => digit3Signal,
     digits(7 downto 4) => digit1Signal,
     digits(3 downto 0) => digit0Signal
   );
 
-  BarLedDriverComponent : BarLedDriver port map(
+  BAR_LED : BarLedDriver port map(
     position => positionSignal,
     bar => led
   );
 
-  SevenSegmentDriverComponent : SevenSegmentDriver port map( --error unbound
+  SEVEN_SEGMENT : SevenSegmentDriver port map( --error unbound
     reset => btnC,
     clock => clk,
 

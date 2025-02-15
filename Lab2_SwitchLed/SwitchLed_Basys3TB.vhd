@@ -58,7 +58,7 @@ begin
   -----------------------------------------------
   --Main stimulus process to make all possible values
   -----------------------------------------------
-  stimulus: process
+  SIGNAL_DRIVER: process
   begin
     wait for 1 ns;
     test_loop : for i in 0 to 31 loop

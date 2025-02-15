@@ -32,43 +32,43 @@ begin
   -- Main process block, grab the value of the input switches
   -- and assign signals to the led bus in a loop
   ------------------------------------------------------------
-  BarLightProc: process(numLeds, leftLedEN, rightLedEN)
-    variable counter : integer range 0 to 7;
+  LIGHT_LEDS: process(numLeds, leftLedEN, rightLedEN)
+
+    variable countOfLeds : integer range 0 to 7;
+
   begin
-    counter := to_integer(unsigned(numLeds));
+    --numLeds converted to an integer number for 
+    --readable conditional signals
+    countOfLeds := to_integer(unsigned(numLeds));
 
   ----------------------------------- Left leds
     if leftLedEN = '1' then
-      for ii in 0 to 6 loop
-        if counter = 0 then
-          leftLeds <= (others => '0');
-        elsif ii < counter then
-          leftLeds(6 - ii) <= '1';
-        elsif ii >= counter then
-          leftLeds(6 - ii) <= '0';
+      for i in 0 to 6 loop
+        if i < countOfLeds then
+          leftLeds(6 - i) <= '1';
+        elsif i >= countOfLeds then
+          leftLeds(6 - i) <= '0';
         else
           leftLeds <= (others => '0');
         end if;
       end loop;
     else
-        leftLeds <= (others => '0');
+      leftLeds <= (others => '0');
     end if;
   ----------------------------------- Right leds
     if rightLedEN = '1' then
-      for jj in 0 to 6 loop
-        if counter = 0 then
-          rightLeds <= (others => '0');
-        elsif jj < counter then
-          rightLeds(jj) <= '1';
-        elsif jj >= counter then
-          rightLeds(jj) <= '0';
+      for k in 0 to 6 loop
+        if k < countOfLeds then
+          rightLeds(k) <= '1';
+        elsif k >= countOfLeds then
+          rightLeds(k) <= '0';
         else
           rightLeds <= (others => '0');
         end if;
       end loop;
     else
-        rightLeds <= (others => '0');
+      rightLeds <= (others => '0');
     end if;
-  end process BarLightProc; 
+  end process LIGHT_LEDS; 
   
 end architecture BarLed_ARCH;

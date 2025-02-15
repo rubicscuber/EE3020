@@ -18,6 +18,7 @@ entity MovingLed is
     leftButton  : in std_logic;
     rightButton : in std_logic;
     resetButton : in std_logic;
+
     position    : out std_logic_vector(3 downto 0)
   );
 end MovingLed;
@@ -34,18 +35,23 @@ begin
   --then turns that position into a binary number
   --position output will send the binary number to the BarLedDriver module
   --------------------------------------------
-  MoveAround: process(leftButton, rightButton, resetButton)
+  MoveLeft: process(leftButton, resetButton)
   begin
     if resetButton = ACTIVE then
       currentPosition <= (others => '0');
     elsif rising_edge(leftButton) and (currentPosition /= 15) then
       currentPosition <= currentPosition + 1;
-    elsif rising_edge(rightButton) and (currentPosition /= 0) then
-      currentPosition <= currentPosition - 1;
     end if;
-  end process MoveAround; 
+  end process MoveLeft;
+
+  MoveRight: process(rightButton)
+  begin
+    if rising_edge(rightButton) and (currentPosition /= 0) then
+      currentPosition <= currentPosition + 1;
+    end if;
+  end process MoveRight;
+
   position <= std_logic_vector(currentPosition);
 
-   
 end architecture MovingLed_ARCH;
 

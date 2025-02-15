@@ -14,7 +14,7 @@ use IEEE.numeric_std.all;
 
 entity SevenSegment is
   port (
-    segNumLeds : in std_logic_vector(2 downto 0);
+    numLeds : in std_logic_vector(2 downto 0);
     cathodes : out std_logic_vector(6 downto 0)
   );
 end entity SevenSegment;
@@ -22,7 +22,7 @@ end entity SevenSegment;
 architecture SevenSegment_ARCH of SevenSegment is
   signal count: integer;
 begin
-  count <= to_integer(unsigned(segNumLeds));
+  count <= to_integer(unsigned(numLeds));
  
   cathodes <= "1000000" when count = 0 else
               "1111001" when count = 1 else
