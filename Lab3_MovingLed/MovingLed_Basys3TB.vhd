@@ -19,9 +19,9 @@ architecture MovingLed_Basys3TB_ARCH of MovingLed_Basys3TB is
     );
   end component;
 
-  signal btnL : std_logic := '0';
-  signal btnR : std_logic := '0';
-  signal btnC : std_logic := '0';
+  signal btnL : std_logic := '1';
+  signal btnR : std_logic := '1';
+  signal btnC : std_logic := '1';
   signal clock : std_logic := '0';
 
   signal an  : std_logic_vector(3 downto 0);
@@ -49,9 +49,9 @@ begin
 
   stimulus : process
 	begin
-    btnC <= '1'; --anctuate reset switch
+    btnC <= '0'; --actuate reset switch
     wait for 1 us;
-    btnC <= '0';
+    btnC <= '1';
     wait for 1 us;
 
 		moveLeft : for k in 0 to 31 loop --move left
@@ -59,9 +59,9 @@ begin
 			wait for 1 us;
 		end loop moveLeft;
 
-    btnC <= '1'; --anctuate reset switch
+    btnC <= '0'; --actuate reset switch
     wait for 1 us;
-    btnC <= '0';
+    btnC <= '1';
     wait for 1 us;
 
 		moveRight : for k in 0 to 31 loop --move right
@@ -78,8 +78,7 @@ begin
       btnR <= not btnR;
       wait for 1 us;
     end loop moveRightAgain;
-
-
 	wait;
 	end process;
+
 end architecture MovingLed_Basys3TB_ARCH;

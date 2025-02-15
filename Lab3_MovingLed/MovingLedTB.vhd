@@ -22,9 +22,9 @@ architecture Behavioral of MovingLedTB is
   ------------------------------------------
   --signals to connect to components
   ------------------------------------------
-  signal leftButton  : std_logic := '0';
-  signal rightButton : std_logic := '0';
-  signal resetButton : std_logic := '0';
+  signal leftButton  : std_logic := '1';
+  signal rightButton : std_logic := '1';
+  signal resetButton : std_logic := '1';
   signal position : std_logic_vector(3 downto 0);
  
 begin
@@ -52,9 +52,9 @@ begin
   ------------------------------------------
   stimulus : process
 	begin
-    resetButton <= '1'; --actuate reset switch
+    resetButton <= '0'; --actuate reset switch
     wait for 1 ns;
-    resetButton <= '0';
+    resetButton <= '1';
     wait for 1 ns;
 
 		moveLeft : for k in 0 to 31 loop
@@ -62,9 +62,9 @@ begin
 			wait for 1 ns;
 		end loop moveLeft;
 
-    resetButton <= '1'; --actuate reset switch
+    resetButton <= '0'; --actuate reset switch
     wait for 1 ns;
-    resetButton <= '0';
+    resetButton <= '1';
     wait for 1 ns;
 
 		moveRight : for k in 0 to 31 loop
@@ -76,6 +76,11 @@ begin
       leftButton <= not leftButton;
 			wait for 1 ns;
 		end loop moveLeftAgain;
+
+		moveRightAgain : for k in 0 to 31 loop
+      rightButton <= not rightButton;
+			wait for 1 ns;
+		end loop moveRightAgain;
 
 	wait;
 	end process;

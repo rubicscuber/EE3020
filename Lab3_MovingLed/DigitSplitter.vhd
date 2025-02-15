@@ -52,6 +52,6 @@ begin
                           "00010011" when 13,
                           "00010100" when 14,
                           "00010101" when 15,
-                          "00000000" when others; 
+                          (others => '0') when others; 
 end architecture;
 
