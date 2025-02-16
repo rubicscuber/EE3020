@@ -33,6 +33,7 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
       leftButton  : in std_logic;
       rightButton : in std_logic;
       resetButton : in std_logic;
+      clock : in std_logic;
 
       position : out std_logic_vector(3 downto 0)
     );
@@ -88,9 +89,10 @@ begin
   digit2Signal <= "0000"; --the unused digit on the seven seg display
 
   MOVE_LED : MovingLed port map(
-    leftButton => btnL, 
+    leftButton => btnL,
     rightButton=> btnR,
     resetButton => btnC,
+    clock => clk,
 
     position => positionSignal
   );

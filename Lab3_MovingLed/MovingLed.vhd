@@ -18,6 +18,7 @@ entity MovingLed is
     leftButton  : in std_logic;
     rightButton : in std_logic;
     resetButton : in std_logic;
+    clock : in std_logic;
 
     position    : out std_logic_vector(3 downto 0)
   );
@@ -25,101 +26,92 @@ end MovingLed;
 
 architecture MovingLed_ARCH of MovingLed is
 
-  --signals for solution 1--
-  signal currentPosition : integer range 0 to 15;
-  signal Left : std_logic;
-  signal Right: std_logic;
-  signal moveClock : std_logic;
+  signal inputState : std_logic;
 
-  --signals for solution 2--
---  signal currentPosition : integer range 0 to 15;
---  signal Left : std_logic;
---  signal Right: std_logic;
+  --shift register made from two seperate registers
+  --reg0InputState is updated in SCAN_INPUT_STATE
+  --reg1InputState gets shifted with reg0InputState in UPDATE_POSITION
+  signal reg0InputState : std_logic := '0';
+  signal reg1InputState : std_logic := '1';
 
-  --signals for solution 3--
---  constant ACTIVE : std_logic := '0';
---  signal moveClock : std_logic;
---  signal currentPosition : integer range 0 to 15;
+  signal regLeft : std_logic;
+  signal regRight : std_logic;
+  signal regPosition : unsigned (3 downto 0) := "0000";
+
+  constant DELAY_COUNT : integer := 50; --10ms on a 100MHz clock (0.01s) = 1M
+  signal counter : integer range 0 to DELAY_COUNT;
+
 
 begin
 
---solution 1
-  moveLeft : process(leftButton)
+  --async signal thats used in SCAN_INPUT_STATE to update reg0InputState
+  inputState <= leftButton or rightButton; 
+
+  ------------------------------------------------------------
+  --Updates a register of the inputstate once per button press
+  --buttons pressed suimultaniously wont do anything
+  ------------------------------------------------------------
+  SCAN_INPUT_STATE : process(clock)
   begin
-    Left <= '0';
-    if falling_edge(leftButton) then
-      Left <= '1';
+    if rising_edge(clock) then
+      if inputState /= reg0InputState and counter < DELAY_COUNT then
+        counter <= counter + 1;
+      elsif counter = DELAY_COUNT then
+        reg0InputState <= inputState;
+        counter <= 0;
+      else
+        counter <= 0;
+      end if;
     end if;
   end process;
 
-  moveRight : process(rightButton)
+  UPDATE_POSITION : process(clock, resetButton)
   begin
-    Right <= '0';
-    if falling_edge(rightButton) then
-      Right <= '1';
-    end if;
-  end process;
-  moveClock <= Left or Right;
-  resolve : process(moveClock, resetButton)
-  begin
-    if resetButton = '0' then
-      currentPosition <= 0;
-    elsif (currentPosition > 0) or (currentPosition < 15) then
-      if rising_edge(moveClock) then
-        if (Left = '0') and (Right = '1') then
-          currentPosition <= currentPosition + 1;
-        elsif (Left = '1') and (Right = '0') then
-          currentPosition <= currentPosition - 1;
+    if resetButton = '1' then
+      regPosition <= (others => '0');
+    elsif rising_edge(clock) then
+
+      --shift registers each clock cycle
+      reg1InputState <= reg0InputState;
+
+      --check the state of registers after shift
+      if (reg0InputState = '1') and (reg1InputState = '0') then
+
+        --check if within boundary and the inputs are correct for that direciton
+        if (regPosition < 15) and (regLeft = '1') and (regRight = '0') then
+          regPosition <= regPosition + 1;
+        elsif (regPosition > 0) and (regLeft = '0') and (regRight = '1') then
+          regPosition <= regPosition - 1;
+        else
+          regPosition <= regPosition + 0;
         end if;
       end if;
     end if;
-    position <= std_logic_vector(to_unsigned(currentPosition, 4));
   end process;
 
-  --solution 2--
---  moveLeft : process(leftButton)
---  begin
---    Left <= '0';
---    if falling_edge(leftButton) then
---      Left <= '1';
---    end if;
---  end process;
---
---  moveRight : process(rightButton)
---  begin
---    Right <= '0';
---    if falling_edge(rightButton) then
---      Right <= '1';
---    end if;
---  end process;
---
---  resolve : process(Left, Right, resetButton)
---  begin
---    if resetButton = '0' then
---      currentPosition <= 0;
---    elsif (Left = '1') and (Right = '0') and (currentPosition < 15) then
---      currentPosition <= currentPosition + 1;
---    elsif (Left = '0') and (Right = '1') and (currentPosition > 0) then
---      currentPosition <= currentPosition - 1;
---    end if;
---    position <= std_logic_vector(to_unsigned(currentPosition, 4));
---  end process;
+  UPDATE_LEFT_REG : process(clock)
+  begin
+    if rising_edge(clock) then
+      if leftButton = '1' then
+        regLeft <= '1';
+      else
+        regLeft <= '0';
+      end if;
+    end if;
+  end process;
 
-  --solution 3--
---  moveClock <= leftButton nand rightButton;
---  MOVE_AROUND: process(moveClock, resetButton) 
---  begin
---    if (resetButton = not ACTIVE) then
---      currentPosition <= 0;
---    elsif rising_edge(moveClock) then
---      if (leftButton = '1') and (rightButton = '0') and (currentPosition < 15) then
---        currentPosition <= (currentPosition + 1);
---      elsif (rightButton = '0') and (leftButton = '1') and (currentPosition > 0) then
---        currentPosition <= (currentPosition - 1);
---      end if;
---    end if;
---  end process MOVE_AROUND;
---  position <= std_logic_vector(to_unsigned(currentPosition, 4));
+  UPDATE_RIGHT_REG : process(clock)
+  begin
+    if rising_edge(clock) then
+      if rightButton = '1' then
+        regRight <= '1';
+      else
+        regRight <= '0';
+      end if;
+    end if;
+  end process;
+
+  position <= std_logic_vector(regPosition);
 
 end architecture MovingLed_ARCH;
 

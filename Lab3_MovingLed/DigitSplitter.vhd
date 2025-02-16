@@ -34,6 +34,7 @@ begin
   digits(11 downto 8) <= position; 
 
   --splitter for tens and ones place (0xA = 0b0001 0000 = 10)
+  --when others catches any metavalues
   with to_integer(unsigned(position)) select
     digits(7 downto 0) <= "00000000" when 0,
                           "00000001" when 1,

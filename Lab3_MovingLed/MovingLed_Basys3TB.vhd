@@ -19,10 +19,10 @@ architecture MovingLed_Basys3TB_ARCH of MovingLed_Basys3TB is
     );
   end component;
 
-  signal btnL : std_logic := '1';
-  signal btnR : std_logic := '1';
-  signal btnC : std_logic := '1';
-  signal clock : std_logic := '0';
+  signal btnL : std_logic := '0';
+  signal btnR : std_logic := '0';
+  signal btnC : std_logic := '0';
+  signal clock : std_logic := '1';
 
   signal an  : std_logic_vector(3 downto 0);
   signal seg : std_logic_vector(6 downto 0);
@@ -44,39 +44,39 @@ begin
   clockgen : process
   begin
     clock <= not clock;
-    wait for 5 ns;
+    wait for 1 ns;
   end process clockgen;
 
   stimulus : process
 	begin
-    btnC <= '0'; --actuate reset switch
-    wait for 1 us;
-    btnC <= '1';
-    wait for 1 us;
+    btnC <= '1'; --actuate reset switch
+    wait for 300 ns;
+    btnC <= '0';
+    wait for 300 ns;
 
 		moveLeft : for k in 0 to 31 loop --move left
       btnL <= not btnL;
-			wait for 1 us;
+			wait for 300 ns;
 		end loop moveLeft;
 
-    btnC <= '0'; --actuate reset switch
-    wait for 1 us;
-    btnC <= '1';
-    wait for 1 us;
+    btnC <= '1'; --actuate reset switch
+    wait for 300 ns;
+    btnC <= '0';
+    wait for 300 ns;
 
 		moveRight : for k in 0 to 31 loop --move right
       btnR <= not btnR;
-			wait for 1 us;
+			wait for 300 ns;
     end loop moveRight;
 
 		moveLeftAgain : for k in 0 to 31 loop --move left
       btnL <= not btnL;
-			wait for 1 us;
+			wait for 300 ns;
 		end loop moveLeftAgain;
 
     moveRightAgain : for k in 0 to 31 loop --move right
       btnR <= not btnR;
-      wait for 1 us;
+      wait for 300 ns;
     end loop moveRightAgain;
 	wait;
 	end process;
