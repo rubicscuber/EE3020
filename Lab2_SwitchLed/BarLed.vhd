@@ -4,7 +4,7 @@ use IEEE.numeric_std.all;
 
 ------------------------------------------------------------
 --Title: Lab_2_SwitchLed
---Name: Nathaniel Roberts
+--Name: Nathaniel Roberts, Mitch Walker
 --Date: 2/12/25
 --Prof: Scott Tippens
 --Desc: This module takes a binary value of switches and 
@@ -33,7 +33,7 @@ begin
 
     ------------------------------------------------------------
     -- Main process block, grab the value of the input switches
-    -- and assign signals to the led bus in a loop
+    -- and assign signals by modeling the behavior with for loops
     ------------------------------------------------------------
     LIGHT_LEDS: process(numLeds, leftLedEN, rightLedEN)
 

@@ -4,7 +4,7 @@ use IEEE.numeric_std.all;
 
 ------------------------------------------------------------
 --Title: Lab_2_SwitchLed
---Name: Nathaniel Roberts
+--Name: Nathaniel Roberts, Mitch Walker
 --Date: 2/12/25
 --Prof: Scott Tippens
 --Desc: This module takes a binary value of switches and 

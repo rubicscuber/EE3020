@@ -4,7 +4,7 @@ use IEEE.numeric_std.all;
 
 ------------------------------------------------------------
 --Title: Lab_2_SwitchLed
---Name: Nathaniel Roberts
+--Name: Nathaniel Roberts, Mitch Walker
 --Date: 2/12/25
 --Prof: Scott Tippens
 --Desc: Testbench for wrapper to stimulate all combinations 
@@ -34,11 +34,11 @@ architecture behavioral  of SwitchLed_Basys3TB is
     -----------------------------------------------
     --Create TB signals
     -----------------------------------------------
-    signal inputBus : std_logic_vector(4 downto 0) := "00000";
+    signal inputs : std_logic_vector(4 downto 0) := "00000";
 
-    signal led : std_logic_vector(15 downto 0);
-    signal an  : std_logic_vector(3 downto 0);
-    signal seg : std_logic_vector(6 downto 0);
+    signal leds : std_logic_vector(15 downto 0);
+    signal anode  : std_logic_vector(3 downto 0);
+    signal segments : std_logic_vector(6 downto 0);
 
 begin
 
@@ -47,13 +47,13 @@ begin
     --component => signal,
     -----------------------------------------------
     UUT : SwitchLed_Basys3 port map(
-        sw   => inputBus(2 downto 0),
-        btnL => inputBus(3),
-        btnR => inputBus(4),
+        sw   => inputs(2 downto 0),
+        btnL => inputs(3),
+        btnR => inputs(4),
 
-        led => led,
-        an  => an,
-        seg => seg
+        led => leds,
+        an  => anode,
+        seg => segments
     );
 
     -----------------------------------------------
@@ -63,7 +63,7 @@ begin
     begin
         wait for 1 ns;
         test_loop : for i in 0 to 31 loop
-            inputBus <= std_logic_vector(to_unsigned(i, 5));
+            inputs <= std_logic_vector(to_unsigned(i, 5));
             wait for 1 ns;
         end loop;
     wait;

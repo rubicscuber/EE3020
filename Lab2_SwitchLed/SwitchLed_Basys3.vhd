@@ -4,7 +4,7 @@ use IEEE.numeric_std.all;
 
 ------------------------------------------------------------
 --Title: Lab_2_SwitchLed
---Name: Nathaniel Roberts
+--Name: Nathaniel Roberts, Mitch Walker
 --Date: 2/12/25
 --Prof: Scott Tippens
 --Desc: Wrapper file for hardware. The two components BarLed
@@ -53,7 +53,7 @@ begin
     led(8 downto 7) <= "00"; -- the two center leds are unused
 
     ----------------------------------------------------
-    --Create component instances in design and connect together
+    --Component instantiations
     ----------------------------------------------------
     LED_DRIVER: BarLed port map(
         numLeds    => sw,
