@@ -14,61 +14,67 @@ use IEEE.numeric_std.all;
 ------------------------------------------------------------
 
 entity BarLed is
-  port (
-    numLeds     : in std_logic_vector(2 downto 0);
-    leftLedEN   : in std_logic;
-    rightLedEN  : in std_logic;
+    port (
+        numLeds     : in std_logic_vector(2 downto 0);
+        leftLedEN   : in std_logic;
+        rightLedEN  : in std_logic;
 
-    leftLeds    : out std_logic_vector(6 downto 0);
-    rightLeds   : out std_logic_vector(6 downto 0)
-    );
+        leftLeds    : out std_logic_vector(6 downto 0);
+        rightLeds   : out std_logic_vector(6 downto 0)
+        );
 end entity BarLed;
 
 architecture BarLed_ARCH of BarLed is
 
+    constant ACTIVE : std_logic := '1';
+    constant WIDTH : integer := (7 - 1);
+
 begin
 
-  ------------------------------------------------------------
-  -- Main process block, grab the value of the input switches
-  -- and assign signals to the led bus in a loop
-  ------------------------------------------------------------
-  LIGHT_LEDS: process(numLeds, leftLedEN, rightLedEN)
+    ------------------------------------------------------------
+    -- Main process block, grab the value of the input switches
+    -- and assign signals to the led bus in a loop
+    ------------------------------------------------------------
+    LIGHT_LEDS: process(numLeds, leftLedEN, rightLedEN)
 
-    variable countOfLeds : integer range 0 to 7;
+        variable countOfLeds : integer range 0 to 7;
 
-  begin
-    --numLeds converted to an integer number for 
-    --readable conditional signals
-    countOfLeds := to_integer(unsigned(numLeds));
+    begin
 
-  ----------------------------------- Left leds
-    if leftLedEN = '1' then
-      for i in 0 to 6 loop
-        if i < countOfLeds then
-          leftLeds(6 - i) <= '1';
-        elsif i >= countOfLeds then
-          leftLeds(6 - i) <= '0';
+        --numLeds converted to an integer
+        --for readable conditionals and easier syntax
+        countOfLeds := to_integer(unsigned(numLeds));
+
+        ----------------------------------- Left leds
+        if leftLedEN = ACTIVE then
+            for i in 0 to WIDTH loop
+                if i < countOfLeds then
+                    leftLeds(WIDTH - i) <= ACTIVE;
+                elsif i >= countOfLeds then
+                    leftLeds(WIDTH - i) <= (not ACTIVE);
+                else
+                    leftLeds <= (others => '0');
+                end if;
+            end loop;
         else
-          leftLeds <= (others => '0');
+            leftLeds <= (others => '0');
         end if;
-      end loop;
-    else
-      leftLeds <= (others => '0');
-    end if;
-  ----------------------------------- Right leds
-    if rightLedEN = '1' then
-      for k in 0 to 6 loop
-        if k < countOfLeds then
-          rightLeds(k) <= '1';
-        elsif k >= countOfLeds then
-          rightLeds(k) <= '0';
+
+        ----------------------------------- Right leds
+        if rightLedEN = ACTIVE then
+            for k in 0 to WIDTH loop
+                if k < countOfLeds then
+                    rightLeds(k) <= ACTIVE;
+                elsif k >= countOfLeds then
+                    rightLeds(k) <= (not ACTIVE);
+                else
+                    rightLeds <= (others => '0');
+                end if;
+            end loop;
         else
-          rightLeds <= (others => '0');
+            rightLeds <= (others => '0');
         end if;
-      end loop;
-    else
-      rightLeds <= (others => '0');
-    end if;
-  end process LIGHT_LEDS; 
-  
+
+    end process LIGHT_LEDS; 
+
 end architecture BarLed_ARCH;

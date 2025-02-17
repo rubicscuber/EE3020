@@ -38,7 +38,7 @@ architecture MovingLed_ARCH of MovingLed is
   signal regRight : std_logic;
   signal regPosition : unsigned (3 downto 0) := "0000";
 
-  constant DELAY_COUNT : integer := 50; --10ms on a 100MHz clock (0.01s) = 1M
+  constant DELAY_COUNT : integer := 1000000; --10ms on a 100MHz clock (0.01s) = 1M
   signal counter : integer range 0 to DELAY_COUNT;
 
 

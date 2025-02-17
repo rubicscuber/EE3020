@@ -66,16 +66,24 @@ begin
   ------------------------------------------------------------
   -- generate clock signal
   ------------------------------------------------------------
-  clockgen : process
+  CLOCK_GEN : process
   begin
     clock <= not clock;
     wait for 1 ns;
   end process clockgen;
 
+  --SYSTEM_RESET : process
+  --begin
+  --  reset <= ACTIVE;
+  --  wait for 2 ns;
+  --  reset <= not ACTIVE;
+  --  wait; --terminates the reset process
+  --end process;
+
   ------------------------------------------------------------
   --main stimulus process to navigate the leds
   ------------------------------------------------------------
-  stimulus : process
+  STIMULUS : process
   begin
     btnC <= '1'; --actuate reset switch
     wait for 300 ns;
