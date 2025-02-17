@@ -20,7 +20,8 @@ entity SwitchLed_Basys3 is
 
       led : out std_logic_vector(15 downto 0);
       an  : out std_logic_vector(3 downto 0);
-      seg : out std_logic_vector(6 downto 0));
+      seg : out std_logic_vector(6 downto 0)
+    );
   end SwitchLed_Basys3;
 
 architecture SwitchLed_Basys3_ARCH of SwitchLed_Basys3 is
@@ -33,7 +34,7 @@ architecture SwitchLed_Basys3_ARCH of SwitchLed_Basys3 is
 
       leftLeds    : out std_logic_vector(6 downto 0);
       rightLeds   : out std_logic_vector(6 downto 0)
-      );
+    );
   end component;
 
   component SevenSegment is
@@ -54,10 +55,12 @@ begin
     rightLedEN => btnR,
 
     leftLeds   => led(15 downto 9),
-    rightLeds  => led(6 downto 0));
+    rightLeds  => led(6 downto 0)
+  );
 
   SEGMENT_DRIVER: SevenSegment port map(
     numLeds => sw,
-    cathodes => seg);
+    cathodes => seg
+  );
 
 end architecture SwitchLed_Basys3_ARCH ;

@@ -25,15 +25,17 @@ end entity DigitSplitter;
 
 architecture DigitSplitter_ARCH of DigitSplitter is
 begin
---------------------------------------------
+
+  ------------------------------------------------------------
   --split and decode section for currentPosition
   --this section splits apart the digit buss
   --digits(11 downto 8) will be decoded into hex directly by the sevenSeg driver
   --digits(7 downto 0) must be decoded first then sent to the devenSeg driver
-  --------------------------------------------
+  ------------------------------------------------------------
+
   digits(11 downto 8) <= position; 
 
-  --splitter for tens and ones place (0xA = 0b0001 0000 = 10)
+  --split tens and ones place (0xA = 0b0001 0000 = 10)
   --when others catches any metavalues
   with to_integer(unsigned(position)) select
     digits(7 downto 0) <= "00000000" when 0,

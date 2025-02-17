@@ -77,7 +77,7 @@ begin
       --check the state of registers after shift
       if (reg0InputState = '1') and (reg1InputState = '0') then
 
-        --check if within boundary and the inputs are correct for that direciton
+        --check if within boundary and the inputs are correct for that direction
         if (regPosition < 15) and (regLeft = '1') and (regRight = '0') then
           regPosition <= regPosition + 1;
         elsif (regPosition > 0) and (regLeft = '0') and (regRight = '1') then

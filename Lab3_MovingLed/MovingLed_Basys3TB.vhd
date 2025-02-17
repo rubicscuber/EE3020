@@ -5,7 +5,22 @@ use IEEE.numeric_std.all;
 entity MovingLed_Basys3TB is
 end entity MovingLed_Basys3TB;
 
+------------------------------------------------------------
+--Title: Lab_3_MovingLed
+--Name: Nathaniel Roberts
+--Date: 
+--Prof: Scott Tippens
+--Desc: 
+--      
+--      
+--      
+------------------------------------------------------------
+
 architecture MovingLed_Basys3TB_ARCH of MovingLed_Basys3TB is
+
+  ------------------------------------------------------------
+  -- Define ports of the UUT
+  ------------------------------------------------------------
   component MovingLed_Basys3 is
   port(
       btnL : in std_logic;
@@ -19,6 +34,9 @@ architecture MovingLed_Basys3TB_ARCH of MovingLed_Basys3TB is
     );
   end component;
 
+  ------------------------------------------------------------
+  -- Create testbench signals
+  ------------------------------------------------------------
   signal btnL : std_logic := '0';
   signal btnR : std_logic := '0';
   signal btnC : std_logic := '0';
@@ -31,6 +49,9 @@ architecture MovingLed_Basys3TB_ARCH of MovingLed_Basys3TB is
 
 begin
 
+  ------------------------------------------------------------
+  -- instantiate component in testbench
+  ------------------------------------------------------------
   UUT : MovingLed_Basys3 port map(
     btnL => btnL,
     btnR => btnR,
@@ -41,44 +62,52 @@ begin
     seg => seg,
     led => led
   );
+
+  ------------------------------------------------------------
+  -- generate clock signal
+  ------------------------------------------------------------
   clockgen : process
   begin
     clock <= not clock;
     wait for 1 ns;
   end process clockgen;
 
+  ------------------------------------------------------------
+  --main stimulus process to navigate the leds
+  ------------------------------------------------------------
   stimulus : process
-	begin
+  begin
     btnC <= '1'; --actuate reset switch
     wait for 300 ns;
     btnC <= '0';
     wait for 300 ns;
 
-		moveLeft : for k in 0 to 31 loop --move left
+    moveLeft : for k in 0 to 31 loop --move left
       btnL <= not btnL;
-			wait for 300 ns;
-		end loop moveLeft;
+      wait for 300 ns;
+    end loop moveLeft;
 
     btnC <= '1'; --actuate reset switch
     wait for 300 ns;
     btnC <= '0';
     wait for 300 ns;
 
-		moveRight : for k in 0 to 31 loop --move right
+    moveRight : for k in 0 to 31 loop --move right
       btnR <= not btnR;
-			wait for 300 ns;
+      wait for 300 ns;
     end loop moveRight;
 
-		moveLeftAgain : for k in 0 to 31 loop --move left
+    moveLeftAgain : for k in 0 to 31 loop --move left
       btnL <= not btnL;
-			wait for 300 ns;
-		end loop moveLeftAgain;
+      wait for 300 ns;
+    end loop moveLeftAgain;
 
     moveRightAgain : for k in 0 to 31 loop --move right
       btnR <= not btnR;
       wait for 300 ns;
     end loop moveRightAgain;
-	wait;
-	end process;
+
+    wait;
+    end process;
 
 end architecture MovingLed_Basys3TB_ARCH;

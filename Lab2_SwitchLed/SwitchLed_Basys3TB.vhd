@@ -2,6 +2,15 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+------------------------------------------------------------
+--Title: Lab_2_SwitchLed
+--Name: Nathaniel Roberts
+--Date: 2/12/25
+--Prof: Scott Tippens
+--Desc: Testbench for wrapper to stimulate all combinations 
+--      of inputs using a for loop cast to std_logic_vector
+------------------------------------------------------------
+
 entity SwitchLed_Basys3TB is
 end SwitchLed_Basys3TB;
 
@@ -45,15 +54,6 @@ begin
     led => led,
     an  => an,
     seg => seg);
-
-  -----------------------------------------------
-  --Assign inputBus to internal signals
-  --for readablilty in the waveform viewer
-  --pro tip dont do this, it leads to messy meta values
-  -----------------------------------------------
-  --sw <= inputBus(2 downto 0);
-  --btnL <= inputBus(3);
-  --btnR <= inputBus(4);
 
   -----------------------------------------------
   --Main stimulus process to make all possible values
