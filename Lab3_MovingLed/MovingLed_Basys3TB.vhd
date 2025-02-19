@@ -70,7 +70,7 @@ begin
   begin
     clock <= not clock;
     wait for 1 ns;
-  end process clockgen;
+  end process CLOCK_GEN;
 
   --SYSTEM_RESET : process
   --begin

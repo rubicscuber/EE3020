@@ -80,10 +80,9 @@ inputState <= leftButton or rightButton;
                 --check if within boundary and the inputs are correct for that direction
                 if (regPosition < 15) and (regLeft = '1') and (regRight = '0') then
                     regPosition <= regPosition + 1;
-                elsif (regPosition > 0) and (regLeft = '0') and (regRight = '1') then
+                end if;
+                if (regPosition > 0) and (regLeft = '0') and (regRight = '1') then
                     regPosition <= regPosition - 1;
-                else
-                    regPosition <= regPosition + 0;
                 end if;
             end if;
         end if;
