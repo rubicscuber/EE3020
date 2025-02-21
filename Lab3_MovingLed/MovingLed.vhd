@@ -103,8 +103,6 @@ begin
     end process;
 
 
-    end process;
-
     UPDATE_LEFT_REG : process(clock)
     begin
         if rising_edge(clock) then
