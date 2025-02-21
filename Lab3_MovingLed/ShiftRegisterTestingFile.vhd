@@ -11,7 +11,7 @@ entity ShiftRegister is
         reset : in std_logic;
 
         position: out std_logic_vector(3 downto 0);
-        ledBarOut: out std_logic_vector(15 downto 0);
+        ledBarOut: out std_logic_vector(15 downto 0)
     );
 end entity ShiftRegister;
 
@@ -44,7 +44,6 @@ begin
                 moveEnable <= '1';
                 moveRight <= '1';
             end if;
-
         end if;
     end process;
 
@@ -64,6 +63,7 @@ begin
                 if(moveLeft = '1') and (positionVar < 15) then
                     ledBar <= ledBar(14 downto 0) & '0';
                     positionVar := positionVar + 1;
+                end if;
                 if(moveLeft = '1') and (positionVar > 0) then
                     ledBar <= '0' & ledBar(15 downto 1);
                     positionVar := positionVar - 1;
