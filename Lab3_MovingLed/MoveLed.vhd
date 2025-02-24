@@ -49,8 +49,8 @@ begin
 
     RISING_EDGE_DETECTION : process (clock, reset)
     begin
-        reg0 <= moveEnable;
-        reg1 <= reg0;
+        reg0Shift <= moveEnable;
+        reg1Shift <= reg0Shift;
     end process;
 
     SHIFT : process(clock, reset)
@@ -59,7 +59,7 @@ begin
         if(reset = '1') then
             moveEnable <= '0';
         elsif(rising_edge(clock)) then
-            if(reg0 = '1') and (reg1 = '0') then
+            if(reg0Shift = '1') and (reg1Shift = '0') then
                 if(moveLeft = '1') and (positionVar < 15) then
                     ledBar <= ledBar(14 downto 0) & '0';
                     positionVar := positionVar + 1;
