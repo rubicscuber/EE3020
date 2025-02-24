@@ -39,25 +39,6 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
         );
     end component;
 
-    component DigitSplitter is
-        port (
-            position: in std_logic_vector(3 downto 0);
-            --note seg[3] is not decoded here, 
-            --instead the position is fed directly to the SevenSegmentDriver
-            --seg[2] is blank
-            --digits (7 downto 4) will be the tens place (seg[1])
-            --digits (3 donwto 0) will be the ones place (seg[0])
-            digits  : out std_logic_vector(7 downto 0)
-        );
-    end component;
-
-    component BarLedDriver is
-        port (
-            position : in std_logic_vector(3 downto 0);
-            bar : out std_logic_vector(15 downto 0)
-        );
-    end component;
-
     component SevenSegmentDriver is
         port(
             reset: in std_logic;
@@ -78,15 +59,57 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
         );
     end component;
 
-    signal digit0Signal : std_logic_vector(3 downto 0);
-    signal digit1Signal : std_logic_vector(3 downto 0);
-    signal digit2Signal : std_logic_vector(3 downto 0);
-    signal positionSignal : std_logic_vector(3 downto 0);
+    signal digits : std_logic_vector(7 downto 0);
+    signal position : std_logic_vector(3 downto 0);
     constant ACTIVE : std_logic := '1';
 
 begin
     
-    digit2Signal <= "0000"; --the unused digit on the seven seg display
+    ------------------------------------------------------------
+    --split and decode section for position into tens and ones
+    --(0xA = 0b0001 0000 = 10)
+    ------------------------------------------------------------
+    with to_integer(unsigned(position)) select
+        digits <= "00000000" when 0,
+                  "00000001" when 1,
+                  "00000010" when 2,
+                  "00000011" when 3,
+                  "00000100" when 4,
+                  "00000101" when 5,
+                  "00000110" when 6,
+                  "00000111" when 7,
+                  "00001000" when 8,
+                  "00001001" when 9,
+                  "00010000" when 10,
+                  "00010001" when 11,
+                  "00010010" when 12,
+                  "00010011" when 13,
+                  "00010100" when 14,
+                  "00010101" when 15,
+                  (others => '0') when others; 
+
+    ------------------------------------------------------------
+    --decodes position to the bar led output
+    ------------------------------------------------------------
+    with to_integer(unsigned(position)) select
+        led <= "0000000000000001" when 0,
+               "0000000000000010" when 1,
+               "0000000000000100" when 2,
+               "0000000000001000" when 3,
+               "0000000000010000" when 4,
+               "0000000000100000" when 5,
+               "0000000001000000" when 6,
+               "0000000010000000" when 7,
+               "0000000100000000" when 8,
+               "0000001000000000" when 9,
+               "0000010000000000" when 10,
+               "0000100000000000" when 11,
+               "0001000000000000" when 12,
+               "0010000000000000" when 13,
+               "0100000000000000" when 14,
+               "1000000000000000" when 15,
+               (others => '0') when others;
+
 
     MOVE_LED : MovingLed port map(
         leftButton => btnL,
@@ -94,28 +117,17 @@ begin
         resetButton => btnC,
         clock => clk,
 
-        position => positionSignal
-    );
-
-    DIGIT_SPLITTER : DigitSplitter port map(
-        position => positionSignal,
-        digits(7 downto 4) => digit1Signal,
-        digits(3 downto 0) => digit0Signal
-    );
-
-    BAR_LED : BarLedDriver port map(
-        position => positionSignal,
-        bar => led
+        position => position
     );
 
     SEVEN_SEGMENT : SevenSegmentDriver port map(
         reset => btnC,
         clock => clk,
 
-        digit3 => positionSignal, --positionSignal is a straight binary number
-        digit2 => digit2Signal,
-        digit1 => digit1Signal,
-        digit0 => digit0Signal,
+        digit3 => position, --hex representation
+        digit2 => "0000",
+        digit1 => digits(7 downto 4), --binary of the tens place
+        digit0 => digits(3 downto 0), --binary of the ones place
 
         blank3 => (not ACTIVE),
         blank2 => (ACTIVE), --blank out seg[2]
