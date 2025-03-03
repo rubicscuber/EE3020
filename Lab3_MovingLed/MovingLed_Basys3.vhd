@@ -64,52 +64,36 @@ architecture MovingLed_Basys3_ARCH of MovingLed_Basys3 is
     constant ACTIVE : std_logic := '1';
 
 begin
-    
+
     ------------------------------------------------------------
     --split and decode section for position into tens and ones
-    --(0xA = 0b0001 0000 = 10)
     ------------------------------------------------------------
-    with to_integer(unsigned(position)) select
-        digits <= "00000000" when 0,
-                  "00000001" when 1,
-                  "00000010" when 2,
-                  "00000011" when 3,
-                  "00000100" when 4,
-                  "00000101" when 5,
-                  "00000110" when 6,
-                  "00000111" when 7,
-                  "00001000" when 8,
-                  "00001001" when 9,
-                  "00010000" when 10,
-                  "00010001" when 11,
-                  "00010010" when 12,
-                  "00010011" when 13,
-                  "00010100" when 14,
-                  "00010101" when 15,
-                  (others => '0') when others; 
+    DIGIT_SPLITTER : process(position)
+        variable bcd : integer range 0 to 15;
+        variable tens : integer range 0 to 15;
+        variable ones : integer range 0 to 15;
+    begin
+        bcd := to_integer(unsigned(position));
+        ones := bcd mod 10;
+        tens := bcd / 10;
+        digits <= std_logic_vector(to_unsigned(tens, 4)) & std_logic_vector(to_unsigned(ones, 4));
+    end process;
 
     ------------------------------------------------------------
-    --decodes position to the bar led output
+    --decodes 4bit position to 16bit map of the led[] bus
     ------------------------------------------------------------
-    with to_integer(unsigned(position)) select
-        led <= "0000000000000001" when 0,
-               "0000000000000010" when 1,
-               "0000000000000100" when 2,
-               "0000000000001000" when 3,
-               "0000000000010000" when 4,
-               "0000000000100000" when 5,
-               "0000000001000000" when 6,
-               "0000000010000000" when 7,
-               "0000000100000000" when 8,
-               "0000001000000000" when 9,
-               "0000010000000000" when 10,
-               "0000100000000000" when 11,
-               "0001000000000000" when 12,
-               "0010000000000000" when 13,
-               "0100000000000000" when 14,
-               "1000000000000000" when 15,
-               (others => '0') when others;
-
+    BAR_LED : process(position)
+        variable position_var : integer range 0 to 15;
+    begin
+        position_var := to_integer(unsigned(position));
+        WRITE_LEDS : for i in 0 to 15 loop
+            if i = position_var then
+                led(i) <= '1';
+            else
+                led(i) <= '0';
+            end if;
+        end loop;
+    end process;
 
     MOVE_LED : MovingLed port map(
         leftButton => btnL,
@@ -128,6 +112,7 @@ begin
         digit2 => "0000",
         digit1 => digits(7 downto 4), --binary of the tens place
         digit0 => digits(3 downto 0), --binary of the ones place
+
 
         blank3 => (not ACTIVE),
         blank2 => (ACTIVE), --blank out seg[2]

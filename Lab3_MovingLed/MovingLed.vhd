@@ -31,11 +31,11 @@ architecture MovingLed_ARCH of MovingLed is
     --shift register made from two seperate registers
     --reg0InputState is updated in DEBOUNCE
     --reg1InputState gets shifted with reg0InputState in SHIFT_REGISTERS
-    --if reg0 = 1, and reg1 = 0, that means a button press was detected
+    --reg0 and reg1 are evaluated in UP_DOWN_COUNTER
     signal reg0InputState : std_logic := '0';
     signal reg1InputState : std_logic := '1';
 
-    signal regPosition : unsigned (3 downto 0) := "0000";
+    signal regPosition : unsigned (3 downto 0);
 
     signal moveLeft : std_logic;
     signal moveRight : std_logic;
