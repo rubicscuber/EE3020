@@ -4,13 +4,12 @@ use IEEE.numeric_std.all;
 
 ------------------------------------------------------------
 --Title: Lab_3_MovingLed
---Name: Nathaniel Roberts
---Date: 
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 3/5/25
 --Prof: Scott Tippens
---Desc: 
---      
---      
---      
+--Desc: Top level file connects the MovingLed.vhd and 
+--      SevenSegmentDriver.vhd while also decoding the Poistion
+--      vector to fit the LED array and SevenSegmentDriver.vhd
 ------------------------------------------------------------
 entity MovingLed_Basys3 is
     port(
@@ -88,9 +87,9 @@ begin
         position_var := to_integer(unsigned(position));
         WRITE_LEDS : for i in 0 to 15 loop
             if i = position_var then
-                led(i) <= '1';
+                led(i) <= ACTIVE;
             else
-                led(i) <= '0';
+                led(i) <= not ACTIVE;
             end if;
         end loop;
     end process;
