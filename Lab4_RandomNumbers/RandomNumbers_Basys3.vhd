@@ -4,13 +4,13 @@ use IEEE.numeric_std.all;
 
 entity RandomNumbers_Basys3 is
     port(
-        btnC in : std_logic;
-        btnD in : std_logic;
-        clk in : std_logic;
+        btnC : in std_logic;
+        btnD : in std_logic;
+        clk : in std_logic;
 
-        led out : std_logic_vector(15 downto 0);
-        an  out : std_logic_vector(3 downto 0);
-        seg out : std_logic_vector(6 downto 0)
+        led : out std_logic_vector(15 downto 0);
+        an  : out std_logic_vector(3 downto 0);
+        seg : out std_logic_vector(6 downto 0)
     );
 end entity;
 
@@ -19,24 +19,24 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
 
     component RandomNumbers is
         port (
-        generateButton in : std_logic;
-        reset in : std_logic;
-        clock in : std_logic;
+        generateButton : in std_logic;
+        reset : in std_logic;
+        clock : in std_logic;
 
-        number0 out : std_logic_vector(3 downto 0);
-        number1 out : std_logic_vector(3 downto 0);
-        number2 out : std_logic_vector(3 downto 0);
-        number3 out : std_logic_vector(3 downto 0);
-        number4 out : std_logic_vector(3 downto 0);
+        number0 : out std_logic_vector(3 downto 0);
+        number1 : out std_logic_vector(3 downto 0);
+        number2 : out std_logic_vector(3 downto 0);
+        number3 : out std_logic_vector(3 downto 0);
+        number4 : out std_logic_vector(3 downto 0);
 
-        readyEN out : std_logic
+        readyEN : out std_logic
         );
     end component;
 
     --each number is displayed once per second
     constant TPS_MAX_COUNT : integer := 100000000;
     signal tps_toggle : std_logic;
-    signal tps_mode;
+    signal tps_mode : std_logic;
 
     --signals that connect the ports to each DFF
     signal number0_signal : std_logic_vector(3 downto 0);
@@ -68,8 +68,8 @@ begin
 
     RNG_GENERATOR : RandomNumbers port map(
         generateButton => btnD,
-        reset => btnC;
-        clock => clk;
+        reset => btnC,
+        clock => clk,
 
         number0 => number0_signal, 
         number1 => number1_signal, 
@@ -78,7 +78,7 @@ begin
         number4 => number4_signal,
 
         readyEN => readyEN
-    )    
+    );    
 
     LOAD_IN_NUMBERS : process(clk, btnC)
     begin
@@ -100,7 +100,7 @@ begin
     end process;
     
     TPS_TOGGLER : process(clk, btnC)
-        variable counter : integer range 0 to PPS_MAX_COUNT;
+        variable counter : integer range 0 to TPS_MAX_COUNT;
     begin
        if btnD = '1' then
             counter := 0;
@@ -114,7 +114,7 @@ begin
                 end if;
             else
                 counter := 0;
-                tps_toggle <= '0';
+                tps_toggle <= '1';
             end if;
         end if;
     end process;
@@ -129,7 +129,7 @@ begin
         end iF;
     end process;
 
-    STATE_TRANSITION : PROCESS (currentNumber, readyEN)
+    STATE_TRANSITION : PROCESS (currentNumber, readyEN)--todo finish function of this
     begin
         case (currentNumber) Is
         ------------------------------------------BLANK
@@ -141,10 +141,12 @@ begin
                 led <= BLANK_LEDS;
                 if readyEN = '1' then
                     nextNumber <= NUM0;
+                else 
+                    nextNumber <= BLANK;
                 end if;
-
         -------------------------------------------NUM0
         when NUM0 =>
+            if 
 
         -------------------------------------------NUM1
         when NUM1 =>
@@ -157,6 +159,7 @@ begin
 
         -------------------------------------------NUM4
         when NUM4 =>
+        end case;
     end process;
 
-end RandomNumbers_ARCH;
+end RandomNumbers_Basys3_ARCH;
