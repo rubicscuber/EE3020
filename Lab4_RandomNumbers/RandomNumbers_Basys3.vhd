@@ -4,8 +4,8 @@ use IEEE.numeric_std.all;
 
 entity RandomNumbers_Basys3 is
     port(
-        btnC : in std_logic;
-        btnD : in std_logic;
+        btnC : in std_logic; --generateEN
+        btnD : in std_logic; --reset
         clk : in std_logic;
 
         led : out std_logic_vector(15 downto 0);
@@ -19,23 +19,62 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
 
     component RandomNumbers is
         port (
-        generateButton : in std_logic;
-        reset : in std_logic;
-        clock : in std_logic;
+            generateEN : in std_logic;
+            reset : in std_logic;
+            clock : in std_logic;
 
-        number0 : out std_logic_vector(3 downto 0);
-        number1 : out std_logic_vector(3 downto 0);
-        number2 : out std_logic_vector(3 downto 0);
-        number3 : out std_logic_vector(3 downto 0);
-        number4 : out std_logic_vector(3 downto 0);
+            number0 : out std_logic_vector(3 downto 0);
+            number1 : out std_logic_vector(3 downto 0);
+            number2 : out std_logic_vector(3 downto 0);
+            number3 : out std_logic_vector(3 downto 0);
+            number4 : out std_logic_vector(3 downto 0);
 
-        readyEN : out std_logic
+            readyEN : out std_logic
         );
     end component;
 
+    component SevenSegmentDriver is
+        port(
+            reset: in std_logic;
+            clock: in std_logic;
+
+            digit3: in std_logic_vector(3 downto 0);    --leftmost digit
+            digit2: in std_logic_vector(3 downto 0);    --2nd from left digit
+            digit1: in std_logic_vector(3 downto 0);    --3rd from left digit
+            digit0: in std_logic_vector(3 downto 0);    --rightmost digit
+
+            blank3: in std_logic;    --leftmost digit
+            blank2: in std_logic;    --2nd from left digit
+            blank1: in std_logic;    --3rd from left digit
+            blank0: in std_logic;    --rightmost digit
+
+            sevenSegs: out std_logic_vector(6 downto 0);    --MSB=g, LSB=a
+            anodes:    out std_logic_vector(3 downto 0)    --MSB=leftmost digit
+        );
+    end component;
+
+    component BCD is -- todo: connect 
+        port(
+            binary4Bit : in std_logic_vector(3 downto 0);
+
+            decimalOnes : out std_logic_vector(3 downto 0);
+            decimalTens : out std_logic_vector(3 downto 0)
+        );
+    end component;
+    
+    component BarLedDriver
+        port(
+            binary4Bit : in  std_logic_vector(3 downto 0);
+            outputEN : in std_logic;
+
+            leds       : out std_logic_vector(15 downto 0)
+        );
+    end component BarLedDriver;
+
     --each number is displayed once per second
-    constant TPS_MAX_COUNT : integer := 100000000;
+    constant TPS_MAX_COUNT : integer := 20;
     signal tps_toggle : std_logic;
+    signal tps_toggle_reg : std_logic;
     signal tps_mode : std_logic;
 
     --signals that connect the ports to each DFF
@@ -44,12 +83,14 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     signal number2_signal : std_logic_vector(3 downto 0);
     signal number3_signal : std_logic_vector(3 downto 0);
     signal number4_signal : std_logic_vector(3 downto 0);
+
     --registers of the 5 numbers
     signal number0_reg : std_logic_vector(3 downto 0);
     signal number1_reg : std_logic_vector(3 downto 0);
     signal number2_reg : std_logic_vector(3 downto 0);
     signal number3_reg : std_logic_vector(3 downto 0);
     signal number4_reg : std_logic_vector(3 downto 0);
+
     --state machine types
     type States_t is (BLANK, NUM0, NUM1, NUM2, NUM3, NUM4);
     signal currentNumber : States_t; 
@@ -61,14 +102,25 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     --select line for MUX
     signal selectLine : std_logic_vector(2 downto 0);
 
+    --Enable signal for bar led
+    signal ledMode : std_logic;
 
-    constant BLANK_LEDS : std_logic_vector(15 downto 0) := "0000000000000000";
+    --blanks for SevenSegmentDriver.vhd for clarity
+    signal blanks : std_logic_vector(3 downto 0);
+
+    --signals for BCD
+    signal decimalOnes : std_logic_vector(3 downto 0);
+    signal decimalTens : std_logic_vector(3 downto 0);
+
+    --signal for the ouput number
+    signal outputNumber : std_logic_vector(3 downto 0);
+    
 
 begin
 
     RNG_GENERATOR : RandomNumbers port map(
-        generateButton => btnD,
-        reset => btnC,
+        generateEN => btnC,
+        reset => btnD,
         clock => clk,
 
         number0 => number0_signal, 
@@ -80,6 +132,39 @@ begin
         readyEN => readyEN
     );    
 
+    SEGMENT_DRIVER : component SevenSegmentDriver port map(
+        reset     => btnD,
+        clock     => clk,
+
+        digit3    => "0000",
+        digit2    => "0000",
+        digit1    => decimalTens,
+        digit0    => decimalOnes,
+
+        blank3    => blanks(3),
+        blank2    => blanks(2),
+        blank1    => blanks(1),
+        blank0    => blanks(0),
+
+
+        sevenSegs => seg,
+        anodes    => an
+    );
+
+    BCD_SPLITTER : BCD port map(
+        binary4Bit  => outputNumber,
+        decimalOnes => decimalOnes,
+        decimalTens => decimalTens
+    );
+    
+    LED_DRIVER : BarLedDriver port map(
+        binary4Bit => outputNumber,
+        outputEN => ledMode,
+
+        leds       => led
+    );
+    
+
     LOAD_IN_NUMBERS : process(clk, btnC)
     begin
         if btnD = '1' then
@@ -89,7 +174,7 @@ begin
             number3_reg <= (others => '0');
             number4_reg <= (others => '0');
        elsif rising_edge(clk) then
-            if readyEN = '1' then
+            if readyEN = '1' and currentNumber = BLANK then
                 number0_reg <= number0_signal;
                 number1_reg <= number1_signal;
                 number2_reg <= number2_signal;
@@ -99,7 +184,7 @@ begin
        end if;
     end process;
     
-    TPS_TOGGLER : process(clk, btnC)
+    TPS_TOGGLER : process(clk, btnD)
         variable counter : integer range 0 to TPS_MAX_COUNT;
     begin
        if btnD = '1' then
@@ -108,57 +193,126 @@ begin
        elsif rising_edge(clk) then
             if tps_mode = '1' then
                 counter := counter + 1;
-                if counter = TPS_MAX_COUNT + 1 then
+                if counter = TPS_MAX_COUNT then
                     tps_toggle <= not tps_toggle;
                     counter := 0;
                 end if;
             else
                 counter := 0;
-                tps_toggle <= '1';
+                tps_toggle <= '0';
             end if;
         end if;
     end process;
 
+    --shift tps_toggle into this register at all times
+    --the only thing that matters is the transition
+    TPS_TOGGLE_SHIFTER : process(clk, btnD)
+    begin
+        if btnD = '1' then
+            tps_toggle_reg <= '0';
+        elsif rising_edge(clk) then
+            tps_toggle_reg <= tps_toggle;
+        end if;
+    end process;
 
     STATE_REG : process(clk, btnD)
     begin
         if btnD = '1' then
             currentNumber <= BLANK;
         elsif rising_edge(clk) then
-            currentNumber <= NextNumber;
-        end iF;
+            currentNumber <= nextNumber;
+        end if;
     end process;
 
-    STATE_TRANSITION : PROCESS (currentNumber, readyEN)--todo finish function of this
+    STATE_TRANSITION : process (currentNumber, readyEN, tps_toggle, tps_toggle_reg)
     begin
         case (currentNumber) Is
-        ------------------------------------------BLANK
+            ------------------------------------------BLANK
             when BLANK =>
-                blank0 <= '1';
-                blank1 <= '1';
-                blank2 <= '1';
-                blank3 <= '1';
-                led <= BLANK_LEDS;
-                if readyEN = '1' then
+                tps_mode <= '0';
+                blanks <= (others => '1'); --deactivate segments
+                ledMode <= '0';            --deactivate leds
+
+                if readyEN = '1' then      --readyEN kicks off the FSM
                     nextNumber <= NUM0;
                 else 
                     nextNumber <= BLANK;
                 end if;
-        -------------------------------------------NUM0
-        when NUM0 =>
-            if 
-
-        -------------------------------------------NUM1
-        when NUM1 =>
-
-        -------------------------------------------NUM2
-        when NUM2 =>
-
-        -------------------------------------------NUM3
-        when NUM3 =>
-
-        -------------------------------------------NUM4
-        when NUM4 =>
+            -------------------------------------------NUM0
+            when NUM0 =>
+                tps_mode <= '1';
+                if tps_toggle = '0' then
+                    ledMode <= '1';   --activate leds
+                    blanks <= "1100"; --activate segments
+                    outputNumber <= number0_reg;
+                    nextNumber <= NUM0;
+                elsif tps_toggle = '1' then
+                    ledMode <= '0';            --deactivate leds
+                    blanks <= (others => '1'); --deactivate segments
+                end if;
+                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                    nextNumber <= NUM1;
+                end if;
+            -------------------------------------------NUM1
+            when NUM1 =>
+                tps_mode <= '1';
+                if tps_toggle = '0' then
+                    ledMode <= '1';   --activate leds
+                    blanks <= "1100"; --activate segments
+                    outputNumber <= number1_reg;
+                    nextNumber <= NUM1;
+                else
+                    ledMode <= '0';            --deactivate leds
+                    blanks <= (others => '1'); --deactivate segments
+                end if;
+                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                    nextNumber <= NUM2;
+                end if;
+            -------------------------------------------NUM2
+            when NUM2 =>
+                tps_mode <= '1';
+                if tps_toggle = '0' then
+                    ledMode <= '1';   --activate leds
+                    blanks <= "1100"; --activate segments
+                    outputNumber <= number2_reg;
+                    nextNumber <= NUM2;
+                else
+                    ledMode <= '0';            --deactivate leds
+                    blanks <= (others => '1'); --deactivate segments
+                end if;
+                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                    nextNumber <= NUM3;
+                end if;
+            -------------------------------------------NUM3
+            when NUM3 =>
+                tps_mode <= '1';
+                if tps_toggle = '0' then
+                    ledMode <= '1';   --activate leds
+                    blanks <= "1100"; --activate segments
+                    outputNumber <= number3_reg;
+                    nextNumber <= NUM3;
+                else
+                    ledMode <= '0';            --deactivate leds
+                    blanks <= (others => '1'); --deactivate segments
+                end if;
+                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                    nextNumber <= NUM4;
+                end if;
+            -------------------------------------------NUM4
+            when NUM4 =>
+                tps_mode <= '1';
+                if tps_toggle = '0' then
+                    ledMode <= '1';   --activate leds
+                    blanks <= "1100"; --activate segments
+                    outputNumber <= number4_reg;
+                    nextNumber <= NUM4;
+                else 
+                    ledMode <= '0';            --deactivate leds
+                    blanks <= (others => '1'); --deactivate segments
+                end if;
+                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                    nextNumber <= BLANK;
+                end if;
         end case;
     end process;
 
