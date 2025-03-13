@@ -74,7 +74,7 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     --each number is displayed once per second
     constant TPS_MAX_COUNT : integer := 20;
     signal tps_toggle : std_logic;
-    signal tps_toggle_reg : std_logic;
+    signal tps_toggle_shift : std_logic;
     signal tps_mode : std_logic;
 
     --signals that connect the ports to each DFF
@@ -206,9 +206,9 @@ begin
     TPS_TOGGLE_SHIFTER : process(clk, btnD)
     begin
         if btnD = '1' then
-            tps_toggle_reg <= '0';
+            tps_toggle_shift <= '0';
         elsif rising_edge(clk) then
-            tps_toggle_reg <= tps_toggle;
+            tps_toggle_shift <= tps_toggle;
         end if;
     end process;
 
@@ -221,7 +221,7 @@ begin
         end if;
     end process;
 
-    STATE_TRANSITION : process (currentNumber, readyEN, tps_toggle, tps_toggle_reg)
+    STATE_TRANSITION : process (currentNumber, readyEN, tps_toggle, tps_toggle_shift)
     begin
         case (currentNumber) Is
             ------------------------------------------BLANK
@@ -247,7 +247,7 @@ begin
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                if (tps_toggle = '1' and tps_toggle_shift = '0') then
                     nextNumber <= NUM1;
                 end if;
             -------------------------------------------NUM1
@@ -258,11 +258,11 @@ begin
                     blanks <= "1100"; --activate segments
                     outputNumber <= number1_reg;
                     nextNumber <= NUM1;
-                else
+                elsif tps_toggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                if (tps_toggle = '1' and tps_toggle_shift = '0') then
                     nextNumber <= NUM2;
                 end if;
             -------------------------------------------NUM2
@@ -273,11 +273,11 @@ begin
                     blanks <= "1100"; --activate segments
                     outputNumber <= number2_reg;
                     nextNumber <= NUM2;
-                else
+                elsif tps_toggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                if (tps_toggle = '1' and tps_toggle_shift = '0') then
                     nextNumber <= NUM3;
                 end if;
             -------------------------------------------NUM3
@@ -288,11 +288,11 @@ begin
                     blanks <= "1100"; --activate segments
                     outputNumber <= number3_reg;
                     nextNumber <= NUM3;
-                else
+                elsif tps_toggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                if (tps_toggle = '1' and tps_toggle_shift = '0') then
                     nextNumber <= NUM4;
                 end if;
             -------------------------------------------NUM4
@@ -303,11 +303,11 @@ begin
                     blanks <= "1100"; --activate segments
                     outputNumber <= number4_reg;
                     nextNumber <= NUM4;
-                else 
+                elsif tps_toggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_reg = '0') then
+                if (tps_toggle = '1' and tps_toggle_shift = '0') then
                     nextNumber <= BLANK;
                 end if;
         end case;
