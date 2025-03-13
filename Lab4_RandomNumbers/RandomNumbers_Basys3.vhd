@@ -53,7 +53,7 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
         );
     end component;
 
-    component BCD is -- todo: connect 
+    component BCD is 
         port(
             binary4Bit : in std_logic_vector(3 downto 0);
 
@@ -98,9 +98,6 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
 
     --one pulse wide ready signal
     signal readyEN : std_logic;
-
-    --select line for MUX
-    signal selectLine : std_logic_vector(2 downto 0);
 
     --Enable signal for bar led
     signal ledMode : std_logic;
@@ -165,7 +162,7 @@ begin
     );
     
 
-    LOAD_IN_NUMBERS : process(clk, btnC)
+    LOAD_IN_NUMBERS : process(clk, btnD)
     begin
         if btnD = '1' then
             number0_reg <= (others => '0');
@@ -173,7 +170,7 @@ begin
             number2_reg <= (others => '0');
             number3_reg <= (others => '0');
             number4_reg <= (others => '0');
-       elsif rising_edge(clk) then
+       elsif falling_edge(clk) then
             if readyEN = '1' and currentNumber = BLANK then
                 number0_reg <= number0_signal;
                 number1_reg <= number1_signal;

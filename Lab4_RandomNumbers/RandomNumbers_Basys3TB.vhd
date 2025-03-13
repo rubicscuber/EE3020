@@ -42,7 +42,7 @@ begin
     CLOCK_GEN : process 
     begin
         clk <= not clk;
-        wait for 3 ns;
+        wait for 2380 ps;
     end process;
 
     stimulus : process
