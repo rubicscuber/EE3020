@@ -45,25 +45,29 @@ begin
         wait for 2380 ps;
     end process;
 
-    stimulus : process
+    RESET_GEN : process
     begin
         btnD <= '0';
         wait for 10 ns;
         btnD <= '1';
         wait for 10 ns;
         btnD <= '0';
-        wait for 10 ns;
-        
-        btnC <= '1';
-        wait for 20 ns;
+        wait;
+    end process;
+
+    STIMULUS : process
+    begin
         btnC <= '0';
-        wait for 10 ns;
+        wait for 50 ns;
+        btnC <= '1';
+        wait for 100 ns;
+
+        btnC <= '0';
         wait for 500 ns;
 
         btnC <= '1';
         wait for 20 ns;
         btnC <= '0';
-        wait for 10 ns;
         wait for 2 us;
 
         wait;

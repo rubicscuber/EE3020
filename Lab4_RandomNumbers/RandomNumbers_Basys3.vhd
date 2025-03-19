@@ -72,7 +72,7 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     end component BarLedDriver;
 
     --each number is displayed once per second
-    constant TPS_MAX_COUNT : integer := 20;
+    constant TPS_MAX_COUNT : integer := 20; --change to 100M before synthesis
     signal tps_toggle : std_logic;
     signal tps_toggle_shift : std_logic;
     signal tps_mode : std_logic;
@@ -107,10 +107,14 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     signal input_reg0 : std_logic;
     signal input_reg1 : std_logic;
 
+    --constants used in the INPUT_PULSE process
+    constant SHIFT_REG_MAX : integer := 2**20-1;
+    constant SHIFT_REG_WIDTH : integer := 20;
+
     --Level control for bar led
     signal ledMode : std_logic;
 
-    --blanks for SevenSegmentDriver.vhd for clarity
+    --blanks vector for SevenSegmentDriver.vhd blanking inputs 
     signal blanks : std_logic_vector(3 downto 0);
 
     --signals for BCD
@@ -158,6 +162,7 @@ begin
 
     BCD_SPLITTER : BCD port map(
         binary4Bit  => outputNumber,
+
         decimalOnes => decimalOnes,
         decimalTens => decimalTens
     );
@@ -169,34 +174,62 @@ begin
         leds       => led
     );
     
-    --synchronize inputs such that only a pulse goes through to the RNG_GENERATOR
+    ------------------------------------------------------------------------------------
+    -- chain of 2 flip-flops to handle metastability, the massaged output is
+    -- generateEN_sync signal
+    ------------------------------------------------------------------------------------
     SYNC_CHAIN : process(clk, btnD)
     begin
         if btnD = '1' then
             generateEN_sync <= '0';
+            input_reg0 <= '0';
+            input_reg1 <= '0';
         elsif rising_edge(clk) then
-            input_reg1 <= btnC;
+            input_reg1 <= btnC; --raw voltage signal
             input_reg0 <= input_reg1;
             generateEN_sync <= input_reg0;
         end if;
     end process;
 
-    --todo: finish
+    ------------------------------------------------------------------------------------
+    -- Debouncing type shift register that only transmits a single pulse to the 
+    -- RNG_GENERATOR if all 20 slots are full of the active level.
+    -- The transmitPulse flag is reset after all ones in the register and is not 
+    -- set until the shift register get all zeroes.
+    ------------------------------------------------------------------------------------
     INPUT_PULSE : process(clk, btnD)
-        variable shiftRegister : unsigned (20 downto 0);
+        --variable shiftRegisterValue : integer range 0 to SHIFT_REG_MAX;
+        variable transmitPulse : integer range 0 to 1; --flag thats updated when valid input
+        variable shiftRegister : unsigned (SHIFT_REG_WIDTH-1 downto 0);
     begin
         if btnD = '1' then
             generateEN <= '0';
+            shiftRegister := (others => '0');
+            transmitPulse := 1;
         elsif rising_edge(clk) then
-            shiftRegister <= shiftRegister(20 downto 1) & generateEN_sync;
-            if shiftRegister = (others => '1') then
+
+            shiftRegister := shiftRegister(shiftRegister'high-1 downto 0) & generateEN_sync;
+
+            --turn off the flag if the button was held long enough
+            if (shiftRegister = SHIFT_REG_MAX) and (transmitPulse = 1) then
                 generateEN <= '1';
-                shiftRegister <= (others => '0');
+                transmitPulse := 0;
+            else
+                generateEN <= '0';
+            end if;
+
+            --turn on the flag if the button was released long enough
+            if (shiftRegister = 0) and (transmitPulse = 0) then
+                transmitPulse := 1;
             end if;
         end if;
     end process;
 
 
+    ------------------------------------------------------------------------------------
+    -- shift each number from the RNG_GENERATOR to a storage register 
+    -- and only if the state machine is in the BLANK (default) state
+    ------------------------------------------------------------------------------------
     LOAD_IN_NUMBERS : process(clk, btnD)
     begin
         if btnD = '1' then
@@ -215,7 +248,12 @@ begin
             end if;
        end if;
     end process;
-    
+
+    ------------------------------------------------------------------------------------
+    -- this process toggles a level control signal (tps_toggle) each second
+    -- the process only counts up if the tps_mode level control is high
+    -- the state machine only allows tps_mode high when it is out of the default state
+    ------------------------------------------------------------------------------------
     TPS_TOGGLER : process(clk, btnD)
         variable counter : integer range 0 to TPS_MAX_COUNT;
     begin
@@ -236,8 +274,11 @@ begin
         end if;
     end process;
 
-    --shift tps_toggle into this register at all times
-    --the only thing that matters is the transition
+    ------------------------------------------------------------------------------------
+    -- tps_toggle is shifted with this flip flop
+    -- the state machine will read the value of tps_toggle and tps_toggle_shift
+    -- and will make the transition if there was a change from low to high
+    ------------------------------------------------------------------------------------
     TPS_TOGGLE_SHIFTER : process(clk, btnD)
     begin
         if btnD = '1' then
@@ -247,6 +288,9 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    -- the state register keeps the state machine synchronized with the clock
+    ------------------------------------------------------------------------------------
     STATE_REG : process(clk, btnD)
     begin
         if btnD = '1' then
@@ -256,6 +300,13 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    -- The main state machine.
+    -- This process has a steady state at BLANK and is kicked out of that state when
+    -- it gets the readyEN pulse, after that it marches onto each state. 
+    -- The state machine only reads the vaue of the readyEN pulse at the default state
+    -- and ignores that signal at all other times.
+    ------------------------------------------------------------------------------------
     CONRTOL_STATE_MACHINE : process (currentNumber, readyEN, tps_toggle, tps_toggle_shift)
     begin
         case (currentNumber) Is
