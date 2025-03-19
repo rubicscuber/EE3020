@@ -99,7 +99,15 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     --one pulse wide ready signal
     signal readyEN : std_logic;
 
-    --Enable signal for bar led
+    --signal after the INPUT_SYNC process
+    signal generateEN : std_logic;
+    signal generateEN_sync : std_logic;
+
+    --internal flip-flop registers for the INPUT_SYNC process
+    signal input_reg0 : std_logic;
+    signal input_reg1 : std_logic;
+
+    --Level control for bar led
     signal ledMode : std_logic;
 
     --blanks for SevenSegmentDriver.vhd for clarity
@@ -116,7 +124,7 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
 begin
 
     RNG_GENERATOR : RandomNumbers port map(
-        generateEN => btnC,
+        generateEN => generateEN,
         reset => btnD,
         clock => clk,
 
@@ -161,6 +169,33 @@ begin
         leds       => led
     );
     
+    --synchronize inputs such that only a pulse goes through to the RNG_GENERATOR
+    SYNC_CHAIN : process(clk, btnD)
+    begin
+        if btnD = '1' then
+            generateEN_sync <= '0';
+        elsif rising_edge(clk) then
+            input_reg1 <= btnC;
+            input_reg0 <= input_reg1;
+            generateEN_sync <= input_reg0;
+        end if;
+    end process;
+
+    --todo: finish
+    INPUT_PULSE : process(clk, btnD)
+        variable shiftRegister : unsigned (20 downto 0);
+    begin
+        if btnD = '1' then
+            generateEN <= '0';
+        elsif rising_edge(clk) then
+            shiftRegister <= shiftRegister(20 downto 1) & generateEN_sync;
+            if shiftRegister = (others => '1') then
+                generateEN <= '1';
+                shiftRegister <= (others => '0');
+            end if;
+        end if;
+    end process;
+
 
     LOAD_IN_NUMBERS : process(clk, btnD)
     begin
@@ -221,7 +256,7 @@ begin
         end if;
     end process;
 
-    STATE_TRANSITION : process (currentNumber, readyEN, tps_toggle, tps_toggle_shift)
+    CONRTOL_STATE_MACHINE : process (currentNumber, readyEN, tps_toggle, tps_toggle_shift)
     begin
         case (currentNumber) Is
             ------------------------------------------BLANK
