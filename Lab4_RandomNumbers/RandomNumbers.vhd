@@ -30,7 +30,6 @@ architecture RandomNumbers_ARCH of RandomNumbers is
 
 begin
 
-    --Dummy process to send 5 numbers to output for testing wrapper
     SEND_NUMBER : process(clock, reset)
     begin
         if reset = '1' then
@@ -41,7 +40,7 @@ begin
             number4 <= "0000";
             readyEN <= '0';
         elsif rising_edge(clock) then
-            if generateEN = '1' then 
+            if generateEN = '1' then --the wrapper file sends a 1 clock pulse wide signal to the generateEN input port
                 number0 <= reg0;     
                 number1 <= reg1;
                 number2 <= reg2;

@@ -17,6 +17,10 @@ end entity;
 
 architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
 
+    
+    ------------------------------------------------------------------------------------
+    --component definitions
+    ------------------------------------------------------------------------------------
     component RandomNumbers is
         port (
             generateEN : in std_logic;
@@ -67,34 +71,37 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
             binary4Bit : in  std_logic_vector(3 downto 0);
             outputEN : in std_logic;
 
-            leds       : out std_logic_vector(15 downto 0)
+            leds : out std_logic_vector(15 downto 0)
         );
     end component BarLedDriver;
 
+    ------------------------------------------------------------------------------------
+    --internal signals and constants
+    ------------------------------------------------------------------------------------
     --each number is displayed once per second
     constant TPS_MAX_COUNT : integer := 20; --change to 100M before synthesis
-    signal tps_toggle : std_logic;
-    signal tps_toggle_shift : std_logic;
-    signal tps_mode : std_logic;
+    signal tpsToggle : std_logic;
+    signal tpsToggleShift : std_logic;
+    signal tpsModeControl : std_logic;
 
     --signals that connect the ports to each DFF
-    signal number0_signal : std_logic_vector(3 downto 0);
-    signal number1_signal : std_logic_vector(3 downto 0);
-    signal number2_signal : std_logic_vector(3 downto 0);
-    signal number3_signal : std_logic_vector(3 downto 0);
-    signal number4_signal : std_logic_vector(3 downto 0);
+    signal number0Signal : std_logic_vector(3 downto 0);
+    signal number1Signal : std_logic_vector(3 downto 0);
+    signal number2Signal : std_logic_vector(3 downto 0);
+    signal number3Signal : std_logic_vector(3 downto 0);
+    signal number4Signal : std_logic_vector(3 downto 0);
 
     --registers of the 5 numbers
-    signal number0_reg : std_logic_vector(3 downto 0);
-    signal number1_reg : std_logic_vector(3 downto 0);
-    signal number2_reg : std_logic_vector(3 downto 0);
-    signal number3_reg : std_logic_vector(3 downto 0);
-    signal number4_reg : std_logic_vector(3 downto 0);
+    signal number0Register : std_logic_vector(3 downto 0);
+    signal number1Register : std_logic_vector(3 downto 0);
+    signal number2Register : std_logic_vector(3 downto 0);
+    signal number3Register : std_logic_vector(3 downto 0);
+    signal number4Register : std_logic_vector(3 downto 0);
 
     --state machine types
     type States_t is (BLANK, NUM0, NUM1, NUM2, NUM3, NUM4);
-    signal currentNumber : States_t; 
-    signal nextNumber : States_t; 
+    signal currentState : States_t; 
+    signal nextState : States_t; 
 
     --one pulse wide ready signal
     signal readyEN : std_logic;
@@ -104,8 +111,8 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     signal generateEN_sync : std_logic;
 
     --internal flip-flop registers for the INPUT_SYNC process
-    signal input_reg0 : std_logic;
-    signal input_reg1 : std_logic;
+    signal inputReg0 : std_logic;
+    signal inputReg1 : std_logic;
 
     --constants used in the INPUT_PULSE process
     constant SHIFT_REG_MAX : integer := 2**20-1;
@@ -125,19 +132,22 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     signal outputNumber : std_logic_vector(3 downto 0);
     
 
-begin
+begin------------------------------------------------------------------------------begin
 
+
+    ------------------------------------------------------------------------------------
+    --component insantiations
+    ------------------------------------------------------------------------------------
     RNG_GENERATOR : RandomNumbers port map(
         generateEN => generateEN,
         reset => btnD,
         clock => clk,
 
-        number0 => number0_signal, 
-        number1 => number1_signal, 
-        number2 => number2_signal,
-        number3 => number3_signal,
-        number4 => number4_signal,
-
+        number0 => number0Signal, 
+        number1 => number1Signal, 
+        number2 => number2Signal,
+        number3 => number3Signal,
+        number4 => number4Signal,
         readyEN => readyEN
     );    
 
@@ -171,34 +181,36 @@ begin
         binary4Bit => outputNumber,
         outputEN => ledMode,
 
-        leds       => led
+        leds => led
     );
     
     ------------------------------------------------------------------------------------
-    -- chain of 2 flip-flops to handle metastability, the massaged output is
-    -- generateEN_sync signal
+    -- chain of 2 flip-flops to handle metastability, 
+    -- the massaged output is the generateEN_sync signal
     ------------------------------------------------------------------------------------
     SYNC_CHAIN : process(clk, btnD)
     begin
         if btnD = '1' then
             generateEN_sync <= '0';
-            input_reg0 <= '0';
-            input_reg1 <= '0';
+            inputReg1 <= '0';
+            inputReg0 <= '0';
         elsif rising_edge(clk) then
-            input_reg1 <= btnC; --raw voltage signal
-            input_reg0 <= input_reg1;
-            generateEN_sync <= input_reg0;
+            inputReg1 <= btnC; --raw voltage signal
+            inputReg0 <= inputReg1;
+            generateEN_sync <= inputReg0;
         end if;
     end process;
 
     ------------------------------------------------------------------------------------
     -- Debouncing type shift register that only transmits a single pulse to the 
     -- RNG_GENERATOR if all 20 slots are full of the active level.
-    -- The transmitPulse flag is reset after all ones in the register and is not 
-    -- set until the shift register get all zeroes.
+    --
+    -- The shift register is filled using the generateEN_sync signal from the above process.
+    --
+    -- The transmitPulse flag goes low when shiftRegister is filled with ones and 
+    -- remains low until the shift register fills with zeroes again.
     ------------------------------------------------------------------------------------
     INPUT_PULSE : process(clk, btnD)
-        --variable shiftRegisterValue : integer range 0 to SHIFT_REG_MAX;
         variable transmitPulse : integer range 0 to 1; --flag thats updated when valid input
         variable shiftRegister : unsigned (SHIFT_REG_WIDTH-1 downto 0);
     begin
@@ -227,174 +239,189 @@ begin
 
 
     ------------------------------------------------------------------------------------
-    -- shift each number from the RNG_GENERATOR to a storage register 
-    -- and only if the state machine is in the BLANK (default) state
+    -- Shift each number from the RNG_GENERATOR to a storage register. 
+    -- Ignore the readyEN pulse if we are currently traversing the states.
+    --
+    -- If the RNG_GENERATOR is trying to send new numbers and the state machine has
+    -- not finnished its path, the output of RNG_GENERATOR is ignored.
     ------------------------------------------------------------------------------------
     LOAD_IN_NUMBERS : process(clk, btnD)
     begin
         if btnD = '1' then
-            number0_reg <= (others => '0');
-            number1_reg <= (others => '0');
-            number2_reg <= (others => '0');
-            number3_reg <= (others => '0');
-            number4_reg <= (others => '0');
+            number0Register <= (others => '0');
+            number1Register <= (others => '0');
+            number2Register <= (others => '0');
+            number3Register <= (others => '0');
+            number4Register <= (others => '0');
        elsif falling_edge(clk) then
-            if readyEN = '1' and currentNumber = BLANK then
-                number0_reg <= number0_signal;
-                number1_reg <= number1_signal;
-                number2_reg <= number2_signal;
-                number3_reg <= number3_signal;
-                number4_reg <= number4_signal;
+            if readyEN = '1' and currentState = BLANK then
+                number0Register <= number0Signal;
+                number1Register <= number1Signal;
+                number2Register <= number2Signal;
+                number3Register <= number3Signal;
+                number4Register <= number4Signal;
             end if;
        end if;
     end process;
 
     ------------------------------------------------------------------------------------
-    -- this process toggles a level control signal (tps_toggle) each second
-    -- the process only counts up if the tps_mode level control is high
-    -- the state machine only allows tps_mode high when it is out of the default state
+    -- This process toggles a level control signal (tps_toggle) each second.
+    -- The process is enabled by the tps_mode level control.
+    -- 
+    -- If the state machine is in the BLANK state, the counter is 0 and is deactivated
+    -- If the state machine is outside of the BLANK state, then the counter is active
+    --
+    -- These next two processes are what make the state machine change every second and
+    -- also enable the numbers to be displayed.
     ------------------------------------------------------------------------------------
     TPS_TOGGLER : process(clk, btnD)
         variable counter : integer range 0 to TPS_MAX_COUNT;
     begin
        if btnD = '1' then
             counter := 0;
-            tps_toggle <= '0';
+            tpsToggle <= '0';
        elsif rising_edge(clk) then
-            if tps_mode = '1' then
+            if tpsModeControl = '1' then
                 counter := counter + 1;
                 if counter = TPS_MAX_COUNT then
-                    tps_toggle <= not tps_toggle;
+                    tpsToggle <= not tpsToggle;
                     counter := 0;
                 end if;
-            else
+            end if;
+            if tpsModeControl = '0' then
                 counter := 0;
-                tps_toggle <= '0';
+                tpsToggle <= '0';
             end if;
         end if;
     end process;
 
     ------------------------------------------------------------------------------------
-    -- tps_toggle is shifted with this flip flop
-    -- the state machine will read the value of tps_toggle and tps_toggle_shift
-    -- and will make the transition if there was a change from low to high
+    -- tps_toggle is shifted with this flip flop.
+    --
+    -- The state machine will read the value of tps_toggle and tps_toggle_shift meaning
+    -- it will transition only if tps_toggle went from low to high.
     ------------------------------------------------------------------------------------
     TPS_TOGGLE_SHIFTER : process(clk, btnD)
     begin
         if btnD = '1' then
-            tps_toggle_shift <= '0';
+            tpsToggleShift <= '0';
         elsif rising_edge(clk) then
-            tps_toggle_shift <= tps_toggle;
+            tpsToggleShift <= tpsToggle;
         end if;
     end process;
 
     ------------------------------------------------------------------------------------
-    -- the state register keeps the state machine synchronized with the clock
+    -- The state register keeps the state machine synchronized with the clock.
     ------------------------------------------------------------------------------------
     STATE_REG : process(clk, btnD)
     begin
         if btnD = '1' then
-            currentNumber <= BLANK;
+            currentState <= BLANK;
         elsif rising_edge(clk) then
-            currentNumber <= nextNumber;
+            currentState <= nextState;
         end if;
     end process;
 
     ------------------------------------------------------------------------------------
     -- The main state machine.
+    --
     -- This process has a steady state at BLANK and is kicked out of that state when
-    -- it gets the readyEN pulse, after that it marches onto each state. 
+    -- it gets the readyEN pulse, after that it marches onto each state given by the 
+    -- tps_toggle signal. 
+    --
     -- The state machine only reads the vaue of the readyEN pulse at the default state
     -- and ignores that signal at all other times.
+    --
+    -- It also controls when the LOAD_IN_NUMBERS process runs.
     ------------------------------------------------------------------------------------
-    CONRTOL_STATE_MACHINE : process (currentNumber, readyEN, tps_toggle, tps_toggle_shift)
+    CONRTOL_STATE_MACHINE : process (currentState, readyEN, tpsToggle, tpsToggleShift)
     begin
-        case (currentNumber) Is
+        case (currentState) Is
             ------------------------------------------BLANK
             when BLANK =>
-                tps_mode <= '0';
+                tpsModeControl <= '0';     --turn off counter and reset it
                 blanks <= (others => '1'); --deactivate segments
                 ledMode <= '0';            --deactivate leds
 
-                if readyEN = '1' then      --readyEN kicks off the FSM
-                    nextNumber <= NUM0;
+                if readyEN = '1' then      --readyEN kicks off the state machine
+                    nextState <= NUM0;
                 else 
-                    nextNumber <= BLANK;
+                    nextState <= BLANK;
                 end if;
             -------------------------------------------NUM0
             when NUM0 =>
-                tps_mode <= '1';
-                if tps_toggle = '0' then
-                    ledMode <= '1';   --activate leds
-                    blanks <= "1100"; --activate segments
-                    outputNumber <= number0_reg;
-                    nextNumber <= NUM0;
-                elsif tps_toggle = '1' then
+                tpsModeControl <= '1';
+                if tpsToggle = '0' then
+                    ledMode <= '1';            --activate leds
+                    blanks <= "1100";          --activate segments
+                    outputNumber <= number0Register;
+                    nextState <= NUM0;
+                elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_shift = '0') then
-                    nextNumber <= NUM1;
+                if (tpsToggle = '1' and tpsToggleShift = '0') then
+                    nextState <= NUM1;
                 end if;
             -------------------------------------------NUM1
             when NUM1 =>
-                tps_mode <= '1';
-                if tps_toggle = '0' then
-                    ledMode <= '1';   --activate leds
-                    blanks <= "1100"; --activate segments
-                    outputNumber <= number1_reg;
-                    nextNumber <= NUM1;
-                elsif tps_toggle = '1' then
+                tpsModeControl <= '1';
+                if tpsToggle = '0' then
+                    ledMode <= '1';            --activate leds
+                    blanks <= "1100";          --activate segments
+                    outputNumber <= number1Register;
+                    nextState <= NUM1;
+                elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_shift = '0') then
-                    nextNumber <= NUM2;
+                if (tpsToggle = '1' and tpsToggleShift = '0') then
+                    nextState <= NUM2;
                 end if;
             -------------------------------------------NUM2
             when NUM2 =>
-                tps_mode <= '1';
-                if tps_toggle = '0' then
-                    ledMode <= '1';   --activate leds
-                    blanks <= "1100"; --activate segments
-                    outputNumber <= number2_reg;
-                    nextNumber <= NUM2;
-                elsif tps_toggle = '1' then
+                tpsModeControl <= '1';
+                if tpsToggle = '0' then
+                    ledMode <= '1';            --activate leds
+                    blanks <= "1100";          --activate segments
+                    outputNumber <= number2Register;
+                    nextState <= NUM2;
+                elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_shift = '0') then
-                    nextNumber <= NUM3;
+                if (tpsToggle = '1' and tpsToggleShift = '0') then
+                    nextState <= NUM3;
                 end if;
             -------------------------------------------NUM3
             when NUM3 =>
-                tps_mode <= '1';
-                if tps_toggle = '0' then
-                    ledMode <= '1';   --activate leds
-                    blanks <= "1100"; --activate segments
-                    outputNumber <= number3_reg;
-                    nextNumber <= NUM3;
-                elsif tps_toggle = '1' then
+                tpsModeControl <= '1';
+                if tpsToggle = '0' then
+                    ledMode <= '1';            --activate leds
+                    blanks <= "1100";          --activate segments
+                    outputNumber <= number3Register;
+                    nextState <= NUM3;
+                elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_shift = '0') then
-                    nextNumber <= NUM4;
+                if (tpsToggle = '1' and tpsToggleShift = '0') then
+                    nextState <= NUM4;
                 end if;
             -------------------------------------------NUM4
             when NUM4 =>
-                tps_mode <= '1';
-                if tps_toggle = '0' then
-                    ledMode <= '1';   --activate leds
-                    blanks <= "1100"; --activate segments
-                    outputNumber <= number4_reg;
-                    nextNumber <= NUM4;
-                elsif tps_toggle = '1' then
+                tpsModeControl <= '1';
+                if tpsToggle = '0' then
+                    ledMode <= '1';            --activate leds
+                    blanks <= "1100";          --activate segments
+                    outputNumber <= number4Register;
+                    nextState <= NUM4;
+                elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
-                if (tps_toggle = '1' and tps_toggle_shift = '0') then
-                    nextNumber <= BLANK;
+                if (tpsToggle = '1' and tpsToggleShift = '0') then
+                    nextState <= BLANK;
                 end if;
         end case;
     end process;
