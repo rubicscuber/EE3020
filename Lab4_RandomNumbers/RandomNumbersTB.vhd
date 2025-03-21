@@ -29,19 +29,19 @@ architecture Behavioral of RandomNumbersTB is
     ------------------------------------------
     --signals to connect to components
     ------------------------------------------
-    signal generateEN : std_logic;
+    signal generateEN : std_logic := '0';
     signal reset : std_logic;
-    signal clock : std_logic;
-    
+    signal clock : std_logic := '0';
+
     signal number0 : std_logic_vector(3 downto 0);
     signal number1 : std_logic_vector(3 downto 0);
     signal number2 : std_logic_vector(3 downto 0);
     signal number3 : std_logic_vector(3 downto 0);
     signal number4 : std_logic_vector(3 downto 0);
-     
+
     signal readyEN : std_logic;
-    
-    
+
+
 begin
 
     ------------------------------------------
@@ -72,11 +72,26 @@ begin
     end process; 
 
     ------------------------------------------
+    -- reset process
+    ------------------------------------------
+    RESET_GEN : process
+    begin
+        reset <= '1';
+        wait for 3 ns;
+        reset <= '0';
+        wait;
+    end process;
+
+    ------------------------------------------
     --input stimulus
     ------------------------------------------
     stimulus : process
     begin
-
+        wait for 500 ns;
+        generateEN <= '1';
+        wait for 2 ns;
+        generateEN <= '0';
+        wait;
     end process;
 
 end Behavioral;
