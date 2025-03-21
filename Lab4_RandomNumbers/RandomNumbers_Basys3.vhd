@@ -2,6 +2,31 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+------------------------------------------------------------------------------------
+--Title: Lab_4_RandomNumbers
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 3/26/25
+--Prof: Scott Tippens
+--Desc: Wrapper file
+--      This file connects all components, processes to each other and to hardware.
+--      
+--      The main controller of functionality is the CONRTOL_STATE_MACHINE which
+--      multiplexes the output of the RNG_GENERATOR to each display component.
+--      
+--      The state machine itself also uses a level control from TPS_TOGGLER that 
+--      cycles between active and inactive every second to drive the displays.
+--
+--      In addition, the same TPS_TOGGLER also informs the state machine when to 
+--      transition to the next state. If the state machine is in the default state
+--      the TPS_TOGGLER is disabled and will not count. 
+--
+--      The ReadyEN pulse initiates the state machine's start.
+--
+--      The state machine ignores any inputs until it has finished a complete 
+--      traversal of all states.
+------------------------------------------------------------------------------------
+
+
 entity RandomNumbers_Basys3 is
     port(
         btnC : in std_logic; --generateEN

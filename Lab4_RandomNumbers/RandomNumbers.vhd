@@ -2,6 +2,22 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
+------------------------------------------------------------------------------------
+--Title: Lab_4_RandomNumbers
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 3/26/25
+--Prof: Scott Tippens
+--Desc: Random Number generator file
+--      This file has 5 randomly chosen seeds for each counter.
+--      All 5 counters continually count no matter the state of 
+--      the other components in the design.
+--
+--      On the generateEN signal pulse, each counter will shift
+--      its current value to the output and raise a ready flag.
+--
+--      The readyEN signal is the and of all ready flags.
+------------------------------------------------------------------------------------
+
 
 entity RandomNumbers is
     port (
@@ -22,12 +38,9 @@ end entity RandomNumbers;
 
 architecture RandomNumbers_ARCH of RandomNumbers is
 
---    constant reg0 : std_logic_vector(3 downto 0) := "1000";
---    constant reg1 : std_logic_vector(3 downto 0) := "0100";
---    constant reg2 : std_logic_vector(3 downto 0) := "0010";
---    constant reg3 : std_logic_vector(3 downto 0) := "0001";
---    constant reg4 : std_logic_vector(3 downto 0) := "0110";
-
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     constant startSeed0 : integer := 6;
     constant startSeed1 : integer := 3;
     constant startSeed2 : integer := 8;
@@ -42,6 +55,9 @@ architecture RandomNumbers_ARCH of RandomNumbers is
 
 begin
 
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     GENERATE_NUM0 : process(clock, reset)
         variable count : unsigned(3 downto 0);
     begin
@@ -59,6 +75,9 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     GENERATE_NUM1 : process(clock, reset)
         variable count : unsigned(3 downto 0);
     begin
@@ -76,6 +95,9 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     GENERATE_NUM2 : process(clock, reset)
         variable count : unsigned(3 downto 0);
     begin
@@ -93,6 +115,9 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     GENERATE_NUM3 : process(clock, reset)
         variable count : unsigned(3 downto 0);
     begin
@@ -110,6 +135,9 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     GENERATE_NUM4 : process(clock, reset)
         variable count : unsigned(3 downto 0);
     begin
