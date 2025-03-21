@@ -42,13 +42,13 @@ begin
     CLOCK_GEN : process 
     begin
         clk <= not clk;
-        wait for 2380 ps;
+        wait for 2280 ps;
     end process;
 
     RESET_GEN : process
     begin
         btnD <= '0';
-        wait for 10 ns;
+        wait for 30 ns;
         btnD <= '1';
         wait for 10 ns;
         btnD <= '0';

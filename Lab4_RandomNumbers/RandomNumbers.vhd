@@ -39,7 +39,7 @@ end entity RandomNumbers;
 architecture RandomNumbers_ARCH of RandomNumbers is
 
     ------------------------------------------------------------------------------------
-    --
+    --seeds and ready signals
     ------------------------------------------------------------------------------------
     constant startSeed0 : integer := 6;
     constant startSeed1 : integer := 3;
@@ -56,7 +56,7 @@ architecture RandomNumbers_ARCH of RandomNumbers is
 begin
 
     ------------------------------------------------------------------------------------
-    --
+    --Counter for number 0
     ------------------------------------------------------------------------------------
     GENERATE_NUM0 : process(clock, reset)
         variable count : unsigned(3 downto 0);
@@ -76,7 +76,7 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    --
+    --Counter for number 1
     ------------------------------------------------------------------------------------
     GENERATE_NUM1 : process(clock, reset)
         variable count : unsigned(3 downto 0);
@@ -96,7 +96,7 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    --
+    --Counter for number 2
     ------------------------------------------------------------------------------------
     GENERATE_NUM2 : process(clock, reset)
         variable count : unsigned(3 downto 0);
@@ -116,7 +116,7 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    --
+    --Counter for number 3
     ------------------------------------------------------------------------------------
     GENERATE_NUM3 : process(clock, reset)
         variable count : unsigned(3 downto 0);
@@ -136,7 +136,7 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    --
+    --Counter for number 4
     ------------------------------------------------------------------------------------
     GENERATE_NUM4 : process(clock, reset)
         variable count : unsigned(3 downto 0);
