@@ -124,7 +124,7 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     signal number4Register : std_logic_vector(3 downto 0);
 
     --state machine types
-    type States_t is (BLANK, NUM0, NUM1, NUM2, NUM3, NUM4);
+    type States_t is (WAIT_FOR_READY, NUM0, NUM1, NUM2, NUM3, NUM4);
     signal currentState : States_t; 
     signal nextState : States_t; 
 
@@ -279,7 +279,7 @@ begin---------------------------------------------------------------------------
             number3Register <= (others => '0');
             number4Register <= (others => '0');
        elsif falling_edge(clk) then
-            if readyEN = '1' and currentState = BLANK then
+            if readyEN = '1' and currentState = WAIT_FOR_READY then
                 number0Register <= number0Signal;
                 number1Register <= number1Signal;
                 number2Register <= number2Signal;
@@ -341,7 +341,7 @@ begin---------------------------------------------------------------------------
     STATE_REG : process(clk, btnD)
     begin
         if btnD = '1' then
-            currentState <= BLANK;
+            currentState <= WAIT_FOR_READY;
         elsif rising_edge(clk) then
             currentState <= nextState;
         end if;
@@ -363,7 +363,7 @@ begin---------------------------------------------------------------------------
     begin
         case (currentState) Is
             ------------------------------------------BLANK
-            when BLANK =>
+            when WAIT_FOR_READY =>
                 tpsModeControl <= '0';     --turn off counter and reset it
                 blanks <= (others => '1'); --deactivate segments
                 ledMode <= '0';            --deactivate leds
@@ -371,7 +371,7 @@ begin---------------------------------------------------------------------------
                 if readyEN = '1' then      --readyEN kicks off the state machine
                     nextState <= NUM0;
                 else 
-                    nextState <= BLANK;
+                    nextState <= WAIT_FOR_READY;
                 end if;
             -------------------------------------------NUM0
             when NUM0 =>
@@ -446,7 +446,7 @@ begin---------------------------------------------------------------------------
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= BLANK;
+                    nextState <= WAIT_FOR_READY;
                 end if;
         end case;
     end process;
