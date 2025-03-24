@@ -42,7 +42,7 @@ end entity;
 
 architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
 
-    
+
     ------------------------------------------------------------------------------------
     --component definitions
     ------------------------------------------------------------------------------------
@@ -90,21 +90,21 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
             decimalTens : out std_logic_vector(3 downto 0)
         );
     end component;
-    
-    component BarLedDriver
+
+    component BarLedDriver_Basys3
         port(
             binary4Bit : in  std_logic_vector(3 downto 0);
             outputEN : in std_logic;
 
             leds : out std_logic_vector(15 downto 0)
         );
-    end component BarLedDriver;
+    end component BarLedDriver_Basys3;
 
     ------------------------------------------------------------------------------------
     --internal signals and constants
     ------------------------------------------------------------------------------------
     --each number is displayed once per second
-    constant TPS_MAX_COUNT : integer := 20; --change to 100M before synthesis
+    constant TPS_MAX_COUNT : integer := 100000000; --change to 100M before synthesis
     signal tpsToggle : std_logic;
     signal tpsToggleShift : std_logic;
     signal tpsModeControl : std_logic;
@@ -174,7 +174,7 @@ begin---------------------------------------------------------------------------
         number3 => number3Signal,
         number4 => number4Signal,
         readyEN => readyEN
-    );    
+    );
 
     SEGMENT_DRIVER : component SevenSegmentDriver port map(
         reset     => btnD,
@@ -201,14 +201,14 @@ begin---------------------------------------------------------------------------
         decimalOnes => decimalOnes,
         decimalTens => decimalTens
     );
-    
+
     LED_DRIVER : BarLedDriver port map(
         binary4Bit => outputNumber,
         outputEN => ledMode,
 
         leds => led
     );
-    
+
     ------------------------------------------------------------------------------------
     -- chain of 2 flip-flops to handle metastability, 
     -- the massaged output is the generateEN_sync signal
@@ -308,7 +308,7 @@ begin---------------------------------------------------------------------------
        elsif rising_edge(clk) then
             if tpsModeControl = '1' then
                 counter := counter + 1;
-                if counter = TPS_MAX_COUNT then
+                if counter >= TPS_MAX_COUNT then
                     tpsToggle <= not tpsToggle;
                     counter := 0;
                 end if;

@@ -2,6 +2,17 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+------------------------------------------------------------------------------------
+--Title: Lab_4_RandomNumbers
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 3/26/25
+--Prof: Scott Tippens
+--Desc: Binary to BCD converter file.
+--      This component simply converts a 4 bit binary number into two seperate
+--      4 bit numbers to represent the Tens and ones place combinationally.
+------------------------------------------------------------------------------------
+
+
 entity BCD is
     port(
         binary4Bit : in std_logic_vector(3 downto 0);
@@ -13,9 +24,7 @@ end entity BCD;
 
 
 architecture BCD_ARCH of BCD is
-    
 begin
-    
     with binary4Bit select
         decimalOnes <= "0000" when "0000",
                        "0001" when "0001",
@@ -55,6 +64,5 @@ begin
                        "0001" when "1110",
                        "0001" when "1111",
                        (others => '0') when others;
-    
 end architecture BCD_ARCH;
 

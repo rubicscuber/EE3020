@@ -41,11 +41,11 @@ architecture RandomNumbers_ARCH of RandomNumbers is
     ------------------------------------------------------------------------------------
     --seeds and ready signals
     ------------------------------------------------------------------------------------
-    constant startSeed0 : integer := 6;
-    constant startSeed1 : integer := 3;
-    constant startSeed2 : integer := 8;
-    constant startSeed3 : integer := 13;
-    constant startSeed4 : integer := 5;
+    constant startSeed0 : integer := 11;
+    constant startSeed1 : integer := 14;
+    constant startSeed2 : integer := 10;
+    constant startSeed3 : integer := 7;
+    constant startSeed4 : integer := 3;
 
     signal num0Ready : std_logic;
     signal num1Ready : std_logic;

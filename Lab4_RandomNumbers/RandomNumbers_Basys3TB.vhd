@@ -2,23 +2,37 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity RandomNumbers_Basys3TB is
-end entity;
+------------------------------------------------------------------------------------
+--Title: Lab_4_RandomNumbers
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 3/26/25
+--Prof: Scott Tippens
+--Desc: Testbench file for the Basys3 wrapper.
+--      The testbench simulates how a user would interact with the design. 
+--      The testbench accounts for a long button press and a press while the numbers
+--      are being displayed.
+------------------------------------------------------------------------------------
 
 architecture Behavioral of RandomNumbers_Basys3TB is
 
+    ------------------------------------------------------------------------------------
+    --Component definition
+    ------------------------------------------------------------------------------------
     component RandomNumbers_Basys3 is
         port(
             btnC : in std_logic; --generateEN
             btnD : in std_logic; --reset
             clk : in std_logic;
-            
+
             led : out std_logic_vector(15 downto 0);
             an  : out std_logic_vector(3 downto 0);
             seg : out std_logic_vector(6 downto 0)
         );
-    end component;   
+    end component;
 
+    ------------------------------------------------------------------------------------
+    --Signals for component
+    ------------------------------------------------------------------------------------
     signal btnC : std_logic := '0';
     signal btnD : std_logic;
     signal clk  : std_logic := '0';
@@ -29,6 +43,9 @@ architecture Behavioral of RandomNumbers_Basys3TB is
 
 begin
 
+    ------------------------------------------------------------------------------------
+    -- Component instantiation into UUT
+    ------------------------------------------------------------------------------------
     UUT : RandomNumbers_Basys3 port map(
         btnC   => btnC,
         btnD   => btnD,
@@ -39,12 +56,18 @@ begin
         seg => seg
     );
 
+    ------------------------------------------------------------------------------------
+    --Clock creating process
+    ------------------------------------------------------------------------------------
     CLOCK_GEN : process 
     begin
         clk <= not clk;
         wait for 2280 ps;
     end process;
 
+    ------------------------------------------------------------------------------------
+    --Reset generating process
+    ------------------------------------------------------------------------------------
     RESET_GEN : process
     begin
         btnD <= '0';
@@ -55,6 +78,9 @@ begin
         wait;
     end process;
 
+    ------------------------------------------------------------------------------------
+    --Main stimulus process
+    ------------------------------------------------------------------------------------
     STIMULUS : process
     begin
         btnC <= '0';
