@@ -21,7 +21,7 @@ entity BarLedDriver_Basys3 is
 
         leds : out std_logic_vector(15 downto 0)
     );
-end entity BarLedDriver;
+end entity BarLedDriver_Basys3;
 
 architecture BarLedDriver_ARCH of BarLedDriver_Basys3 is
 

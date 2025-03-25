@@ -202,7 +202,7 @@ begin---------------------------------------------------------------------------
         decimalTens => decimalTens
     );
 
-    LED_DRIVER : BarLedDriver port map(
+    LED_DRIVER : BarLedDriver_Basys3 port map(
         binary4Bit => outputNumber,
         outputEN => ledMode,
 
