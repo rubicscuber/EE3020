@@ -13,8 +13,10 @@ use ieee.numeric_std.all;
 --      are being displayed.
 ------------------------------------------------------------------------------------
 
-architecture Behavioral of RandomNumbers_Basys3TB is
+entity RandomNumbers_Basys3TB is
+end entity RandomNumbers_Basys3TB;
 
+architecture RandomNumbers_Basys3TB_ARCH of RandomNumbers_Basys3 is 
     ------------------------------------------------------------------------------------
     --Component definition
     ------------------------------------------------------------------------------------
@@ -99,5 +101,4 @@ begin
         wait;
     end process;
 
-end architecture Behavioral ;
-
+end architecture RandomNumbers_Basys3TB_ARCH ;

@@ -1,160 +1,154 @@
 library IEEE;
-use IEEE.std_logic_1164.all;
-use IEEE.numeric_std.all;
+use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
-------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------
 --Title: Lab_4_RandomNumbers
 --Name: Nathaniel Roberts, Mitch Walker
 --Date: 3/26/25
 --Prof: Scott Tippens
---Desc: Random Number generator file
---      This file has 5 randomly chosen seeds for each counter.
---      All 5 counters continually count no matter the state of 
---      the other components in the design.
---
---      On the generateEN signal pulse, each counter will shift
---      its current value to the output and raise a ready flag.
---
---      The readyEN signal is the and of all ready flags.
-------------------------------------------------------------------------------------
 
+-- Description: Random Number Generator
+--    This component utilizes 5 counters incrementing at different rates to
+--    generate 5 psuedo-random numbers
+--
+--    Each RandCounter has a sub counter. Once the sub counter reaches its 
+--    max value (set externally through maxSubCount) the randNum counter is 
+--    incremented
+--
+--    Once generateEN recieves a pulse, SET_RAND_NUM sets the output signals 
+--    to their corresponding randNum counter value. SET_RAND_NUM them sends 
+--    a pulsed signal through readyEN to signify that new random numbers 
+--    have been set
+----------------------------------------------------------------------------------
 
 entity RandomNumbers is
     port (
-    generateEN : in std_logic;
-    reset : in std_logic;
-    clock : in std_logic;
-
-    number0 : out std_logic_vector(3 downto 0);
-    number1 : out std_logic_vector(3 downto 0);
-    number2 : out std_logic_vector(3 downto 0);
-    number3 : out std_logic_vector(3 downto 0);
-    number4 : out std_logic_vector(3 downto 0);
-
-    readyEN : out std_logic
+        generateEN  : in std_logic;
+        clock       : in std_logic;
+        reset       : in std_logic;
+        
+        readyEN     : out std_logic;
+        number0     : out std_logic_vector(3 downto 0);
+        number1     : out std_logic_vector(3 downto 0);
+        number2     : out std_logic_vector(3 downto 0);
+        number3     : out std_logic_vector(3 downto 0);
+        number4     : out std_logic_vector(3 downto 0)
     );
-end entity RandomNumbers;
-
+end RandomNumbers;
 
 architecture RandomNumbers_ARCH of RandomNumbers is
+    ---------------------------------------------------------------------------------
+    -- Constants
+    ---------------------------------------------------------------------------------
+    constant ACTIVE                 : std_logic := '1'; -- Active value
+    constant COUNTER_MAX_VALUE      : integer   := 15;  -- Max value for 'random' counters
+    constant maxSubCount_Length     : integer   := 3;   -- Length of the subCount signal within RandCounter component
 
-    ------------------------------------------------------------------------------------
-    --seeds and ready signals
-    ------------------------------------------------------------------------------------
-    constant startSeed0 : integer := 11;
-    constant startSeed1 : integer := 14;
-    constant startSeed2 : integer := 10;
-    constant startSeed3 : integer := 7;
-    constant startSeed4 : integer := 3;
+    constant MAX_SUB_COUNT_0 : integer   := 3;   -- Max value for sub counter 1
+    constant MAX_SUB_COUNT_1 : integer   := 6;   -- Max value for sub counter 2
+    constant MAX_SUB_COUNT_2 : integer   := 2;   -- Max value for sub counter 3
+    constant MAX_SUB_COUNT_3 : integer   := 5;   -- Max value for sub counter 4
+    constant MAX_SUB_COUNT_4 : integer   := 4;   -- Max value for sub counter 5
 
-    signal num0Ready : std_logic;
-    signal num1Ready : std_logic;
-    signal num2Ready : std_logic;
-    signal num3Ready : std_logic;
-    signal num4Ready : std_logic;
+    ----------------------------------------------------------------------------------
+    -- Components 
+    ----------------------------------------------------------------------------------
+    component RandCounter is
+        port (
+            maxSubCount : in std_logic_vector(2 downto 0);
+            clock       : in std_logic;
+            reset       : in std_logic;
+      
+            randNum     : out std_logic_vector(3 downto 0)
+        );
+    end component;
 
+    ----------------------------------------------------------------------------------
+    -- Signals 
+    ----------------------------------------------------------------------------------
+    signal randNum0 : std_logic_vector(3 downto 0);
+    signal randNum1 : std_logic_vector(3 downto 0);
+    signal randNum2 : std_logic_vector(3 downto 0);
+    signal randNum3 : std_logic_vector(3 downto 0);
+    signal randNum4 : std_logic_vector(3 downto 0);
+    
+    
 begin
 
-    ------------------------------------------------------------------------------------
-    --Counter for number 0
-    ------------------------------------------------------------------------------------
-    GENERATE_NUM0 : process(clock, reset)
-        variable count : unsigned(3 downto 0);
-    begin
-        if reset = '1' then
-            number0 <= "0000";
-            count := to_unsigned(startSeed0, 4);
-            num0Ready <= '0';
+    ---------------------------------------------------------------------------------
+    -- Component Instatiations
+    ---------------------------------------------------------------------------------
+    -- Used to generate pseudo-random value for randNum0
+    RAND_COUNTER_0 : RandCounter port map (
+      maxSubCount   => std_logic_vector(to_unsigned(MAX_SUB_COUNT_0, maxSubCount_Length)),
+      clock         => clock,
+      reset         => reset,
+      randNum       => randNum0
+    );
+
+    RAND_COUNTER_1 : RandCounter port map (
+      maxSubCount   => std_logic_vector(to_unsigned(MAX_SUB_COUNT_1, maxSubCount_Length)),
+      clock         => clock,
+      reset         => reset,
+      randNum       => randNum1
+    );
+
+    RAND_COUNTER_2 : RandCounter port map (
+      maxSubCount   => std_logic_vector(to_unsigned(MAX_SUB_COUNT_2, maxSubCount_Length)),
+      clock         => clock,
+      reset         => reset,
+      randNum       => randNum2
+    );
+
+    RAND_COUNTER_3 : RandCounter port map (
+      maxSubCount   => std_logic_vector(to_unsigned(MAX_SUB_COUNT_3, maxSubCount_Length)),
+      clock         => clock,
+      reset         => reset,
+      randNum       => randNum3
+    );
+
+    RAND_COUNTER_4 : RandCounter port map (
+      maxSubCount   => std_logic_vector(to_unsigned(MAX_SUB_COUNT_4, maxSubCount_Length)),
+      clock         => clock,
+      reset         => reset,
+      randNum => randNum4
+    );
+
+    ---------------------------------------------------------------------------------
+    -- Checks for generateEN signal
+    -- Sets the output numbers to the current values of their respective counters
+    -- Outputs a pule through readyEN
+    ---------------------------------------------------------------------------------
+    SET_RAND_NUM : process(clock, reset) 
+        variable newNumSet : std_logic := not ACTIVE;
+    begin        
+        if reset = ACTIVE then
+            readyEN     <= not ACTIVE;
+            newNumSet   := not ACTIVE;
+
+            number0     <= "0000";
+            number1     <= "0000";
+            number2     <= "0000";
+            number3     <= "0000";
+            number4     <= "0000";
         elsif rising_edge(clock) then
-            count := count + 1;
-            num0Ready <= '0';
-            if generateEN = '1' then
-                number0 <= std_logic_vector(count);
-                num0Ready <= '1';
+            if generateEN = ACTIVE then
+                number0     <= randNum0;
+                number1     <= randNum1;
+                number2     <= randNum2;
+                number3     <= randNum3;
+                number4     <= randNum4;
+                newNumSet   := ACTIVE;
+            end if;
+
+            if newNumSet = ACTIVE then
+                readyEN     <= ACTIVE;
+                newNumSet   := not ACTIVE;
+            else
+                readyEN     <= not ACTIVE;
             end if;
         end if;
     end process;
 
-    ------------------------------------------------------------------------------------
-    --Counter for number 1
-    ------------------------------------------------------------------------------------
-    GENERATE_NUM1 : process(clock, reset)
-        variable count : unsigned(3 downto 0);
-    begin
-        if reset = '1' then
-            number1 <= "0000";
-            count := to_unsigned(startSeed1, 4);
-            num1Ready <= '0';
-        elsif rising_edge(clock) then
-            count := count + 1;
-            num1Ready <= '0';
-            if generateEN = '1' then
-                number1 <= std_logic_vector(count);
-                num1Ready <= '1';
-            end if;
-        end if;
-    end process;
-
-    ------------------------------------------------------------------------------------
-    --Counter for number 2
-    ------------------------------------------------------------------------------------
-    GENERATE_NUM2 : process(clock, reset)
-        variable count : unsigned(3 downto 0);
-    begin
-        if reset = '1' then
-            number2 <= "0000";
-            count := to_unsigned(startSeed2, 4);
-            num2Ready <= '0';
-        elsif rising_edge(clock) then
-            count := count + 1;
-            num2Ready <= '0';
-            if generateEN = '1' then
-                number2 <= std_logic_vector(count);
-                num2Ready <= '1';
-            end if;
-        end if;
-    end process;
-
-    ------------------------------------------------------------------------------------
-    --Counter for number 3
-    ------------------------------------------------------------------------------------
-    GENERATE_NUM3 : process(clock, reset)
-        variable count : unsigned(3 downto 0);
-    begin
-        if reset = '1' then
-            number3 <= "0000";
-            count := to_unsigned(startSeed3, 4);
-            num3Ready <= '0';
-        elsif rising_edge(clock) then
-            count := count + 1;
-            num3Ready <= '0';
-            if generateEN = '1' then
-                number3 <= std_logic_vector(count);
-                num3Ready <= '1';
-            end if;
-        end if;
-    end process;
-
-    ------------------------------------------------------------------------------------
-    --Counter for number 4
-    ------------------------------------------------------------------------------------
-    GENERATE_NUM4 : process(clock, reset)
-        variable count : unsigned(3 downto 0);
-    begin
-        if reset = '1' then
-            number4 <= "0000";
-            count := to_unsigned(startSeed4, 4);
-            num4Ready <= '0';
-        elsif rising_edge(clock) then
-            count := count + 1;
-            num4Ready <= '0';
-            if generateEN = '1' then
-                number4 <= std_logic_vector(count);
-                num4Ready <= '1';
-            end if;
-        end if;
-    end process;
-
-    readyEN <= num0Ready and num1Ready and num2Ready and num3Ready and num4Ready;
-
-end architecture RandomNumbers_ARCH;
+end RandomNumbers_ARCH;
