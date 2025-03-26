@@ -104,7 +104,7 @@ architecture RandomNumbers_Basys3_ARCH of RandomNumbers_Basys3 is
     --internal signals and constants
     ------------------------------------------------------------------------------------
     --each number is displayed once per second
-    constant TPS_MAX_COUNT : integer := 100000000; --change to 100M before synthesis
+    constant TPS_MAX_COUNT : integer := 50; --change to 100M before synthesis
     signal tpsToggle : std_logic;
     signal tpsToggleShift : std_logic;
     signal tpsModeControl : std_logic;

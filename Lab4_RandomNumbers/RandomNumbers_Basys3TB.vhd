@@ -16,7 +16,7 @@ use ieee.numeric_std.all;
 entity RandomNumbers_Basys3TB is
 end entity RandomNumbers_Basys3TB;
 
-architecture RandomNumbers_Basys3TB_ARCH of RandomNumbers_Basys3 is 
+architecture RandomNumbers_Basys3TB_ARCH of RandomNumbers_Basys3TB is 
     ------------------------------------------------------------------------------------
     --Component definition
     ------------------------------------------------------------------------------------
