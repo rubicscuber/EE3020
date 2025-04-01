@@ -22,12 +22,15 @@ entity MemoryGame is
         clock : in std_logic;
         reset : in std_logic
 
+        --add more ports here
+
 
     );
 end entity MemoryGame;
 
 
 architecture MemoryGame_ARCH of MemoryGame is
+
     component RandomNumbers is
         port(
             generateEN : in  std_logic;
@@ -66,27 +69,81 @@ architecture MemoryGame_ARCH of MemoryGame is
             gameWinEN   : out std_logic
         );
     end component NumberChecker;
+
+    --general signals for design
+    signal countScaler : integer;
+    signal tpsToggle : std_logic;
+    signal tpsModeControl : std_logic;
+    signal tpsToggleShift : std_logic;
+    signal currentState : GameStates_t;
+    signal nextState : GameStates_t;
+    signal blanks : std_logic_vector(3 downto 0);
+
+    --signals for RNG_GENERATOR
+    signal generateEN : std_logic;
+    signal readyEN : std_logic;
+    signal number0 : std_logic_vector(3 downto 0);
+    signal number1 : std_logic_vector(3 downto 0);
+    signal number2 : std_logic_vector(3 downto 0);
+    signal number3 : std_logic_vector(3 downto 0);
+
+    
+    --signals for number checker
+    signal readMode : std_logic;
+    signal gameState : GameStates_t;
+    signal number4 : std_logic_vector(3 downto 0);
+    signal nextRoundEN : std_logic;
+    signal gameOverEN : std_logic;
+    signal gameWinEN : std_logic;
+
 begin
-    ------------------------------------------------------------------------------------
-    -- This process toggles a level control signal (tps_toggle) each second.
-    -- The process is enabled by the tps_mode level control.
-    -- 
-    -- If the state machine is in the BLANK state, the counter is 0 and is deactivated
-    -- If the state machine is outside of the BLANK state, then the counter is active
-    --
-    -- These next two processes are what make the state machine change every second and
-    -- also enable the numbers to be displayed.
-    ------------------------------------------------------------------------------------
+    RNG_GENERATOR : component RandomNumbers port map(
+        generateEN => generateEN,
+
+        clock      => clock,
+        reset      => reset,
+
+        readyEN    => readyEN,
+
+        number0    => number0,
+        number1    => number1,
+        number2    => number2,
+        number3    => number3,
+        number4    => number4
+    );
+
+    CHECK_NUMBERS : component NumberChecker
+        port map(
+            switches    => switches,
+
+            number0     => number0,
+            number1     => number1,
+            number2     => number2,
+            number3     => number3,
+            number4     => number4,
+
+            readMode    => readMode,
+            gameState   => gameState,
+
+            clock       => clock,
+            reset       => reset,
+
+            nextRoundEN => nextRoundEN,
+            gameOverEN  => gameOverEN,
+            gameWinEN   => gameWinEN
+        );
+    
+
     TPS_TOGGLER : process(clock, reset)
-        variable counter : integer range 0 to TPS_MAX_COUNT;
+        variable counter : integer; 
     begin
-       if reset = '1' then
+        if reset = '1' then
             counter := 0;
             tpsToggle <= '0';
-       elsif rising_edge(clock) then
+        elsif rising_edge(clock) then
             if tpsModeControl = '1' then
                 counter := counter + 1;
-                if counter >= TPS_MAX_COUNT then
+                if counter >= countScaler then
                     tpsToggle <= not tpsToggle;
                     counter := 0;
                 end if;
@@ -98,12 +155,6 @@ begin
         end if;
     end process;
 
-    ------------------------------------------------------------------------------------
-    -- tps_toggle is shifted with this flip flop.
-    --
-    -- The state machine will read the value of tps_toggle and tps_toggle_shift meaning
-    -- it will transition only if tps_toggle went from low to high.
-    ------------------------------------------------------------------------------------
     TPS_TOGGLE_SHIFTER : process(clock, reset)
     begin
         if reset = '1' then
@@ -116,7 +167,7 @@ begin
     ------------------------------------------------------------------------------------
     -- The state register keeps the state machine synchronized with the clock.
     ------------------------------------------------------------------------------------
-    STATE_REG : process(clock, reset)
+    GAME_STATE_REG : process(clock, reset)
     begin
         if reset = '1' then
             currentState <= WAIT_FOR_READY;
@@ -126,18 +177,10 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    -- The main state machine.
-    --
-    -- This process has a steady state at BLANK and is kicked out of that state when
-    -- it gets the readyEN pulse, after that it marches onto each state given by the 
-    -- tps_toggle signal. 
-    --
-    -- The state machine only reads the vaue of the readyEN pulse at the default state
-    -- and ignores that signal at all other times.
-    --
-    -- It also controls when the LOAD_IN_NUMBERS process runs.
+    -- Game state machine, unfinished and needs modification
+    -- another state machine should handle the process of driving the displays 
     ------------------------------------------------------------------------------------
-    CONRTOL_STATE_MACHINE : process (currentState, readyEN, tpsToggle, tpsToggleShift)
+    GAME_STATE_MACHINE : process (currentState, readyEN, tpsToggle, tpsToggleShift)
     begin
         case (currentState) Is
             ------------------------------------------BLANK
@@ -147,78 +190,78 @@ begin
                 ledMode <= '0';            --deactivate leds
 
                 if readyEN = '1' then      --readyEN kicks off the state machine
-                    nextState <= NUM0;
+                    nextState <= ROUND1;
                 else 
                     nextState <= WAIT_FOR_READY;
                 end if;
-            -------------------------------------------NUM0
-            when NUM0 =>
+            -------------------------------------------ROUND1
+            when ROUND1 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
                     outputNumber <= number0Register;
-                    nextState <= NUM0;
+                    nextState <= ROUND1;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= NUM1;
+                    nextState <= ROUND2;
                 end if;
-            -------------------------------------------NUM1
-            when NUM1 =>
+            -------------------------------------------ROUND2
+            when ROUND2 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
                     outputNumber <= number1Register;
-                    nextState <= NUM1;
+                    nextState <= ROUND2;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= NUM2;
+                    nextState <= ROUND3;
                 end if;
-            -------------------------------------------NUM2
-            when NUM2 =>
+            -------------------------------------------ROUND3
+            when ROUND3 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
                     outputNumber <= number2Register;
-                    nextState <= NUM2;
+                    nextState <= ROUND3;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= NUM3;
+                    nextState <= ROUND4;
                 end if;
-            -------------------------------------------NUM3
-            when NUM3 =>
+            -------------------------------------------ROUND4
+            when ROUND4 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
                     outputNumber <= number3Register;
-                    nextState <= NUM3;
+                    nextState <= ROUND4;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= NUM4;
+                    nextState <= ROUND5;
                 end if;
-            -------------------------------------------NUM4
-            when NUM4 =>
+            -------------------------------------------ROUND5
+            when ROUND5 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
                     outputNumber <= number4Register;
-                    nextState <= NUM4;
+                    nextState <= ROUND5;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
