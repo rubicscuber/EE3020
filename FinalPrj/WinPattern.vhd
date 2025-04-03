@@ -78,23 +78,22 @@ begin
         end if;
     end process;
 
+    --TODO: Test 
     DISPLAY_RATE: process(reset, clock)
         variable count: integer range 0 to BLINK_COUNT;
     begin
         if (reset = ACTIVE) then
             count := 0;
+            stateMachineControl <=  not ACTIVE;
         elsif (rising_edge(clock)) then
-            if (count = BLINK_COUNT) then
+            if (count >= BLINK_COUNT) then
                 count := 0;
+                stateMachineControl <= not stateMachineControl;
             else
                 count := count + 1;
             end if;
         end if;
-
-        stateMachineControl <= not ACTIVE;
-        if (count = BLINK_COUNT) then
-            stateMachineControl <= ACTIVE;
-        end if;
     end process DISPLAY_RATE;
+
 
 end WinPattern_ARCH;
