@@ -15,6 +15,8 @@ entity WinPattern is
         reset: in std_logic;
         clock: in std_logic;
 
+        --the outputs of all these seperate pattern drivers MUST be multiplexed on the design diagram
+        --due to the fact that Z is not synthesizable on the fabric
         leds: out std_logic_vector(15 downto 0)
 
         --winPatternIsBusy : out std_logic;
@@ -34,7 +36,6 @@ architecture WinPattern_ARCH of WinPattern is
     constant PATTERN2_LEDS : std_logic_vector(15 downto 0) := "0101010101010101";
 
     signal stateMachineControl: std_logic;
-    signal toggle : std_logic;
 
 begin
 
@@ -47,31 +48,34 @@ begin
             end if;
     end process;
 
-    WIN_PATTERN_SM: process(currentState, toggle)
+    WIN_PATTERN_SM: process(currentState, stateMachineControl, winPatternStart)
     begin
-        case CurrentState is
-            when BLANK => 
-                leds <= PATTERN0_LEDS;
-                if (stateMachineControl = ACTIVE) then
-                    nextState <= PATTERN1;
-                end if;
+        if winPatternStart = ACTIVE then
+            case CurrentState is
+                when BLANK => 
+                    leds <= PATTERN0_LEDS;
+                    if (stateMachineControl = ACTIVE) then
+                        nextState <= PATTERN1;
+                    end if;
 
-            when PATTERN1 =>
-                leds <= PATTERN1_LEDS;
-                if (stateMachineControl=ACTIVE) then
-                    nextState <= PATTERN2;
-                else
-                    nextState <= PATTERN1;
-                end if;
+                when PATTERN1 =>
+                    leds <= PATTERN1_LEDS;
+                    if (stateMachineControl=ACTIVE) then
+                        nextState <= PATTERN2;
+                    else
+                        nextState <= PATTERN1;
+                    end if;
 
-            when PATTERN2 =>
-                leds <= PATTERN2_LEDS;
-                if (stateMachineControl=ACTIVE) then
-                    nextState <= PATTERN1;
-                else
-                    nextState <= PATTERN2;
-                end if;
-        end case;
+                when PATTERN2 =>
+                    leds <= PATTERN2_LEDS;
+                    if (stateMachineControl=ACTIVE) then
+                        nextState <= PATTERN1;
+                    else
+                        nextState <= PATTERN2;
+                    end if;
+            end case;
+
+        end if;
     end process;
 
     DISPLAY_RATE: process(reset, clock)
