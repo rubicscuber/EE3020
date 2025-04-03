@@ -111,7 +111,7 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     end component;
 
     ------------------------------------------------------------------------------------
-    --internal signals and constants
+    --internal signals and constants this list will change depending on design component
     ------------------------------------------------------------------------------------
     --each number is displayed once per second
     constant TPS_MAX_COUNT : integer := 50; --change to 100M before synthesis
@@ -152,21 +152,24 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     signal debouncedSwitches : std_logic_vector(NUM_OF_SWITCHES-1 downto 0);
     signal pulsedSwitches : std_logic_vector(NUM_OF_SWITCHES-1 downto 0);
 
-    --Level control for bar led
-    signal ledMode : std_logic;
+    -------------------------------------------------------------------------------
+    -- synchronised start button signal path
+    -------------------------------------------------------------------------------
+    signal startButtonSync : std_logic;
+    signal startButtonDebounced : std_logic;
+    signal startButtonPulsed : std_logic;
 
-    --blanks vector for SevenSegmentDriver.vhd blanking inputs 
+    -------------------------------------------------------------------------------
+    --signals for SevenSegmentDriver component
+    -------------------------------------------------------------------------------
+    signal digit3 : std_logic_vector(3 downto 0);
+    signal digit2 : std_logic_vector(3 downto 0);
+    signal digit1 : std_logic_vector(3 downto 0);
+    signal digit0 : std_logic_vector(3 downto 0);
     signal blanks : std_logic_vector(3 downto 0);
-
-    --signals for BCD
-    signal decimalOnes : std_logic_vector(3 downto 0);
-    signal decimalTens : std_logic_vector(3 downto 0);
-
-    --signal for the ouput number
-    signal outputNumber : std_logic_vector(3 downto 0);
     
 
-begin------------------------------------------------------------------------------begin
+    begin------------------------------------------------------------------------------begin
 
 
     ------------------------------------------------------------------------------------
@@ -176,10 +179,10 @@ begin---------------------------------------------------------------------------
         reset     => btnD,
         clock     => clk,
 
-        digit3    => "0000",
-        digit2    => "0000",
-        digit1    => decimalTens,
-        digit0    => decimalOnes,
+        digit3    => digit3,
+        digit2    => digit2,
+        digit1    => digit1,
+        digit0    => digit0,
 
         blank3    => blanks(3),
         blank2    => blanks(2),
@@ -191,25 +194,11 @@ begin---------------------------------------------------------------------------
         anodes    => an
     );
 
-    BCD_SPLITTER : BCD port map(
-        binary4Bit  => outputNumber,
-
-        decimalOnes => decimalOnes,
-        decimalTens => decimalTens
-    );
-
-    LED_DRIVER : BarLedDriver_Basys3 port map(
-        binary4Bit => outputNumber,
-        outputEN => ledMode,
-
-        leds => led
-    );
-
     ------------------------------------------------------------------------------------
     -- generate chain of 2 flip-flops for each vector switch element
     ------------------------------------------------------------------------------------
-    SYNCH : for i in 0 to NUM_OF_SWITCHES-1 generate
-        SYNCH_X : component SynchronizerChain
+    SYNC : for i in 0 to NUM_OF_SWITCHES-1 generate
+        SYNC_X : component SynchronizerChain
             generic map(
                 CHAIN_SIZE => CHAIN_SIZE
             )
@@ -250,6 +239,38 @@ begin---------------------------------------------------------------------------
             );
     end generate;        
 
+    START_BUTTON_SYNC : SynchronizerChain
+        generic map(
+            CHAIN_SIZE => CHAIN_SIZE
+        )
+        port map(
+            reset   => btnD,
+            clock   => clk,
+            asyncIn => btnC,
+            syncOut => startButtonSync
+        );
+
+    START_BUTTON_DEBOUNCE : component Debouncer
+        generic map(
+            DELAY_COUNT => DELAY_COUNT
+        )
+        port map(
+            bitIn        => startButtonSync,
+            clock        => clk,
+            reset        => btnD,
+            debouncedOut => startButtonDebounced
+        );
+
+    START_BUTTON_PULSE : LevelDetector
+        port map(
+            reset    => btnD,
+            clock    => clk,
+            trigger  => startButtonDebounced,
+            pulseOut => startButtonPulsed
+        );
+    
+    
+    
 
 --    ------------------------------------------------------------------------------------
 --    -- Shift each number from the RNG_GENERATOR to a storage register. 
