@@ -2,26 +2,26 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-entity WinPattern is
+entity LosePattern is
     generic(BLINK_COUNT : natural); --(100000000/4)-1;
     port(
-
+        
         --this port may need to be a level control depending on if there 
         --needs to be a set number of loops through this pattern
         --in the case that this is a pulse, this component should ouput a busy 
         --signal and have a set number of looping iterations of the pattern.
-        winPatternStart : in std_logic; 
+        losePatternStart : in std_logic; 
 
         reset: in std_logic;
         clock: in std_logic;
 
         leds: out std_logic_vector(15 downto 0)
 
-        --winPatternIsBusy : out std_logic;
+        --losePatternIsBusy : out std_logic;
     );
-end WinPattern;
+end LosePattern;
 
-architecture WinPattern_ARCH of WinPattern is
+architecture LosePattern_ARCH of LosePattern is
 
     type States_t is (BLANK, PATTERN1, PATTERN2);
     signal currentState: States_t;
@@ -30,8 +30,8 @@ architecture WinPattern_ARCH of WinPattern is
     constant ACTIVE: std_logic := '1';
 
     constant PATTERN0_LEDS : std_logic_vector(15 downto 0) := "0000000000000000";
-    constant PATTERN1_LEDS : std_logic_vector(15 downto 0) := "1010101010101010";
-    constant PATTERN2_LEDS : std_logic_vector(15 downto 0) := "0101010101010101";
+    constant PATTERN1_LEDS : std_logic_vector(15 downto 0) := "1111111111111111";
+    constant PATTERN2_LEDS : std_logic_vector(15 downto 0) := "0000000000000000";
 
     signal stateMachineControl: std_logic;
     signal toggle : std_logic;
@@ -93,4 +93,5 @@ begin
         end if;
     end process DISPLAY_RATE;
 
-end WinPattern_ARCH;
+end LosePattern_ARCH;
+
