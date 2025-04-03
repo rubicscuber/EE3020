@@ -36,7 +36,6 @@ architecture LosePattern_ARCH of LosePattern is
     constant PATTERN2_LEDS : std_logic_vector(15 downto 0) := "0000000000000000";
 
     signal stateMachineControl: std_logic;
-    signal toggle : std_logic;
 
 begin
 
