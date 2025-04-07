@@ -60,7 +60,7 @@ begin
 
                 when PATTERN1 =>
                     leds <= PATTERN1_LEDS;
-                    if (stateMachineControl=ACTIVE) then
+                    if (stateMachineControl = not ACTIVE) then
                         nextState <= PATTERN2;
                     else
                         nextState <= PATTERN1;
@@ -68,7 +68,7 @@ begin
 
                 when PATTERN2 =>
                     leds <= PATTERN2_LEDS;
-                    if (stateMachineControl=ACTIVE) then
+                    if (stateMachineControl = ACTIVE) then
                         nextState <= PATTERN1;
                     else
                         nextState <= PATTERN2;
@@ -78,7 +78,6 @@ begin
         end if;
     end process;
 
-    --TODO: Test 
     DISPLAY_RATE: process(reset, clock)
         variable count: integer range 0 to BLINK_COUNT;
     begin
@@ -94,6 +93,5 @@ begin
             end if;
         end if;
     end process DISPLAY_RATE;
-
 
 end WinPattern_ARCH;
