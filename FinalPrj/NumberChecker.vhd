@@ -29,7 +29,7 @@ use work.Types_package.all;
 
 entity NumberChecker is
     port(
-        switches : in std_logic_vector(15 downto 0);
+        switches : in std_logic_vector(15 downto 0); --the pulsed user inputs go here
 
         number0 : in std_logic_vector(3 downto 0);
         number1 : in std_logic_vector(3 downto 0);
@@ -37,9 +37,11 @@ entity NumberChecker is
         number3 : in std_logic_vector(3 downto 0);
         number4 : in std_logic_vector(3 downto 0);
 
-        readMode : in std_logic;
-        gameState : in GameStates_t; -- this could also be a coded vector 
-                                     -- that represents how many numbers are being checked.
+        readMode : in std_logic;     -- pull this port low when there is displaying happening
+
+        gameState : in GameStates_t; -- tell this component how many numbers we need to check
+                                     -- this port could also just be a vector or anything that tells
+                                     -- NumberChecker what round we're on.
 
         clock : in std_logic;
         reset : in std_logic;
