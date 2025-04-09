@@ -30,7 +30,7 @@ begin
     DRIVE_LEDS : process(binary4Bit, outputEN)
     begin
         if outputEN = '0' then
-            leds <= (others => '0');
+            leds <= (others => 'Z');
         else
             for i in 0 to 15 loop
                 if to_integer(unsigned(binary4BIt)) = i then

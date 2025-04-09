@@ -90,7 +90,17 @@ begin
             if (readMode = '1') and (to_integer(unsigned(switches)) > 0) then
 
                 case gameState is
-                    when WAIT_FOR_READY =>
+                    when GAME_LOSE =>
+                        nextRoundEN <= '0';
+                        gameOverEN <= '0';
+                        gameWinEN <= '0';
+
+                    when GAME_WIN =>
+                        nextRoundEN <= '0';
+                        gameOverEN <= '0';
+                        gameWinEN <= '0';
+
+                    when WAIT_FOR_START =>
                         nextRoundEN <= '0';
                         gameOverEN <= '0';
                         gameWinEN <= '0';

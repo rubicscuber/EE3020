@@ -46,7 +46,7 @@ architecture Behavioral of NumberCheckerTB is
     signal number3     :   std_logic_vector(3 downto 0) := "0100";
     signal number4     :   std_logic_vector(3 downto 0) := "0101";
     signal readMode    :   std_logic := '1';
-    signal gameState   :   GameStates_t := ROUND3;
+    signal gameState   :   GameStates_t := NUM3;
     signal clock       :   std_logic := '1';
 
     signal reset       :   std_logic;

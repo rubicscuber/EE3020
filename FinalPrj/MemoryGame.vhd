@@ -19,10 +19,14 @@ use work.types_package.all;
 entity MemoryGame is
     port(
         switches : in std_logic_vector(15 downto 0);
+        start : in std_logic;
+        
         clock : in std_logic;
-        reset : in std_logic
+        reset : in std_logic;
 
         --add more ports here
+        leds : out std_logic_vector(15 downto 0);
+        outputScore : out std_logic_vector(4 downto 0)
 
 
     );
@@ -70,35 +74,82 @@ architecture MemoryGame_ARCH of MemoryGame is
         );
     end component NumberChecker;
 
+    component WinPattern
+        generic(BLINK_COUNT : natural);
+        port(
+            winPatternEN     : in  std_logic;
+            reset            : in  std_logic;
+            clock            : in  std_logic;
+            leds             : out std_logic_vector(15 downto 0);
+            winPatternIsBusy : out std_logic
+        );
+    end component WinPattern;
+
+    component LosePattern
+        generic(BLINK_COUNT : natural);
+        port(
+            losePatternEN     : in  std_logic;
+            reset             : in  std_logic;
+            clock             : in  std_logic;
+            leds              : out std_logic_vector(15 downto 0);
+            losePatternIsBusy : out std_logic
+        );
+    end component LosePattern;
+
+    component BarLedDriver_Basys3
+        port(
+            binary4Bit : in  std_logic_vector(3 downto 0);
+            outputEN   : in  std_logic;
+            leds       : out std_logic_vector(15 downto 0)
+        );
+    end component BarLedDriver_Basys3;
+
     --general signals for design
-    signal countScaler : integer;
     signal tpsToggle : std_logic;
     signal tpsModeControl : std_logic;
     signal tpsToggleShift : std_logic;
-    signal currentState : GameStates_t;
-    signal nextState : GameStates_t;
+
+    --signals to control display
     signal blanks : std_logic_vector(3 downto 0);
 
     --signals for RNG_GENERATOR
-    signal generateEN : std_logic;
     signal readyEN : std_logic;
     signal number0 : std_logic_vector(3 downto 0);
     signal number1 : std_logic_vector(3 downto 0);
     signal number2 : std_logic_vector(3 downto 0);
     signal number3 : std_logic_vector(3 downto 0);
+    signal number4 : std_logic_vector(3 downto 0);
 
     
     --signals for number checker
     signal readMode : std_logic;
     signal gameState : GameStates_t;
-    signal number4 : std_logic_vector(3 downto 0);
     signal nextRoundEN : std_logic;
     signal gameOverEN : std_logic;
     signal gameWinEN : std_logic;
+    signal ledMode : std_logic;
+
+    --game state signals
+    signal currentGameState : GameStates_t;
+    signal nextGameState : GameStates_t;
+
+    --display state signals
+    signal currentDisplayState : DisplayStates_t;
+    signal nextDisplayState : DisplayStates_t;
+
+    --signals keeping track of game related stats
+    signal countScaler : integer; --countScaler must decrement every gameWinEN pulse
+    signal score : integer;
+    constant MAX_COUNT : integer := 1000000;
+    signal winPatternIsBusy : std_logic;
+    signal losePatternIsBusy : std_logic;
+    signal inputControl : std_logic;
+    
+    signal outputNumber : std_logic_vector(3 downto 0);
 
 begin
     RNG_GENERATOR : component RandomNumbers port map(
-        generateEN => generateEN,
+        generateEN => start and inputControl and (not winPatternIsBusy) and (not losePatternIsBusy),
 
         clock      => clock,
         reset      => reset,
@@ -112,26 +163,56 @@ begin
         number4    => number4
     );
 
-    CHECK_NUMBERS : component NumberChecker
+    CHECK_NUMBERS : component NumberChecker port map(
+        switches    => switches,
+
+        number0     => number0,
+        number1     => number1,
+        number2     => number2,
+        number3     => number3,
+        number4     => number4,
+
+        readMode    => readMode,
+        gameState   => gameState,
+
+        clock       => clock,
+        reset       => reset,
+
+        nextRoundEN => nextRoundEN,
+        gameOverEN  => gameOverEN,
+        gameWinEN   => gameWinEN
+    );
+    
+    WIN_PATTERN_DRIVER : component WinPattern
+        generic map(
+            BLINK_COUNT => (100000000/4)-1
+        )
         port map(
-            switches    => switches,
+            winPatternEN     => gameWinEN,
+            reset            => reset,
+            clock            => clock,
+            leds             => leds,
+            winPatternIsBusy => winPatternIsBusy
+    );
+    
+    LOSE_PATTERN_DRRIVER : LosePattern
+        generic map(
+            BLINK_COUNT => (100000000/4)-1
+        )
+        port map(
+            losePatternEN     => gameOverEN,
+            reset             => reset,
+            clock             => clock,
+            leds              => leds,
+            losePatternIsBusy => losePatternIsBusy
+    );
 
-            number0     => number0,
-            number1     => number1,
-            number2     => number2,
-            number3     => number3,
-            number4     => number4,
-
-            readMode    => readMode,
-            gameState   => gameState,
-
-            clock       => clock,
-            reset       => reset,
-
-            nextRoundEN => nextRoundEN,
-            gameOverEN  => gameOverEN,
-            gameWinEN   => gameWinEN
-        );
+    GAME_LED_DRIVER : BarLedDriver_Basys3 port map(
+        binary4Bit => outputNumber,
+        outputEN   => ledMode,
+        leds       => leds
+    );
+    
     
 
     TPS_TOGGLER : process(clock, reset)
@@ -143,7 +224,7 @@ begin
         elsif rising_edge(clock) then
             if tpsModeControl = '1' then
                 counter := counter + 1;
-                if counter >= countScaler then
+                if counter >= (MAX_COUNT - countScaler) then
                     tpsToggle <= not tpsToggle;
                     counter := 0;
                 end if;
@@ -167,109 +248,186 @@ begin
     ------------------------------------------------------------------------------------
     -- The state register keeps the state machine synchronized with the clock.
     ------------------------------------------------------------------------------------
-    GAME_STATE_REG : process(clock, reset)
+    DISPLAY_STATE_REG : process(clock, reset)
     begin
         if reset = '1' then
-            currentState <= WAIT_FOR_READY;
+            currentDisplayState <= IDLE;
         elsif rising_edge(clock) then
-            currentState <= nextState;
+            currentDisplayState <= nextDisplayState;
         end if;
     end process;
 
     ------------------------------------------------------------------------------------
-    -- Game state machine, unfinished and needs modification
-    -- another state machine should handle the process of driving the displays 
+    -- State machine responsible for driving the main number output
     ------------------------------------------------------------------------------------
-    GAME_STATE_MACHINE : process (currentState, readyEN, tpsToggle, tpsToggleShift)
+    DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, tpsToggle, tpsToggleShift)
     begin
-        case (currentState) Is
+        case (currentDisplayState) Is
             ------------------------------------------BLANK
-            when WAIT_FOR_READY =>
+            when IDLE =>
                 tpsModeControl <= '0';     --turn off counter and reset it
                 blanks <= (others => '1'); --deactivate segments
                 ledMode <= '0';            --deactivate leds
-
-                if readyEN = '1' then      --readyEN kicks off the state machine
-                    nextState <= ROUND1;
+                readMode <= '1';
+                if readyEN = '1' or nextRoundEN = '1' then      
+                    nextDisplayState <= NUM1;
                 else 
-                    nextState <= WAIT_FOR_READY;
+                    nextDisplayState <= IDLE;
                 end if;
             -------------------------------------------ROUND1
-            when ROUND1 =>
+            when NUM1 =>
                 tpsModeControl <= '1';
+                readMode <= '0';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
-                    outputNumber <= number0Register;
-                    nextState <= ROUND1;
+                    outputNumber <= number0;
+                    nextDisplayState <= NUM1;
                 elsif tpsToggle = '1' then
-                    ledMode <= '0';            --deactivate leds
-                    blanks <= (others => '1'); --deactivate segments
-                end if;
-                if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= ROUND2;
+                    if currentGameState = ROUND1 then
+                        nextDisplayState <= IDLE;
+                    else
+                        nextDisplayState <= NUM2;
+                    end if;
                 end if;
             -------------------------------------------ROUND2
-            when ROUND2 =>
+            when NUM2 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
-                    outputNumber <= number1Register;
-                    nextState <= ROUND2;
+                    outputNumber <= number1;
+                    nextDisplayState <= NUM2;
                 elsif tpsToggle = '1' then
-                    ledMode <= '0';            --deactivate leds
-                    blanks <= (others => '1'); --deactivate segments
+                    ledMode <= '0';
+                    blanks <= (others => '0');
                 end if;
-                if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= ROUND3;
+                if (tpsToggle = '1') and (tpsToggleShift = '0') then
+                    if currentGameState = ROUND2 then
+                        nextDisplayState <= IDLE;
+                    else
+                        nextDisplayState <= NUM2;
+                    end if;
                 end if;
+
             -------------------------------------------ROUND3
-            when ROUND3 =>
+            when NUM3 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
-                    outputNumber <= number2Register;
-                    nextState <= ROUND3;
+                    outputNumber <= number2;
+                    nextDisplayState <= NUM3;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= ROUND4;
+                    if currentGameState = ROUND3 then
+                        nextDisplayState <= IDLE;
+                    else
+                        nextDisplayState <= NUM4;
+                    end if;
                 end if;
             -------------------------------------------ROUND4
-            when ROUND4 =>
+            when NUM4 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
-                    outputNumber <= number3Register;
-                    nextState <= ROUND4;
+                    outputNumber <= number3;
+                    nextDisplayState <= NUM4;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= ROUND5;
+                    if currentGameState = ROUND4 then
+                        nextDisplayState <= IDLE;
+                    else
+                        nextDisplayState <= NUM5;
+                    end if;
                 end if;
             -------------------------------------------ROUND5
-            when ROUND5 =>
+            when NUM5 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= "1100";          --activate segments
-                    outputNumber <= number4Register;
-                    nextState <= ROUND5;
+                    outputNumber <= number4;
+                    nextDisplayState <= NUM5;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
                     blanks <= (others => '1'); --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextState <= WAIT_FOR_READY;
+                    nextDisplayState <= IDLE;
                 end if;
         end case;
     end process;
 
+    ------------------------------------------------------------------------------------
+    -- Game state register
+    ------------------------------------------------------------------------------------
+    GAME_STATE_REG : process(clock, reset)
+    begin
+        if reset = '1' then
+            currentGameState <= WAIT_FOR_START;
+        elsif rising_edge(clock) then
+            currentGameState <= nextGameState;
+        end if;
+    end process;
+
+    ------------------------------------------------------------------------------------
+    -- Game state machine
+    ------------------------------------------------------------------------------------
+    GAME_STATE_MACHINE : process (currentGameState, readyEN, nextRoundEN, gameOverEN, gameWinEN)
+    begin
+        case(currentGameState) is
+            when WAIT_FOR_START =>
+                inputControl <= '1';
+                if readyEN = '1' then
+                    nextGameState <= ROUND1;
+                end if;
+            when ROUND1 =>
+                inputControl <= '0';
+                if nextRoundEN = '1' then
+                    nextGameState <= ROUND2;
+                elsif gameOverEN = '1' then
+                    nextGameState <= GAME_LOSE;
+                end if;
+            when ROUND2 =>
+                if nextRoundEN = '1' then
+                    nextGameState <= ROUND3;
+                elsif gameOverEN = '1' then
+                    nextGameState <= GAME_LOSE;
+                end if;
+            when ROUND3 =>
+                if nextRoundEN = '1' then
+                    nextGameState <= ROUND4;
+                elsif gameOverEN = '1' then
+                    nextGameState <= GAME_LOSE;
+                end if;
+            when ROUND4 =>
+                if nextRoundEN = '1' then
+                    nextGameState <= ROUND5;
+                elsif gameOverEN = '1' then
+                    nextGameState <= GAME_LOSE;
+                end if;
+            when ROUND5 =>
+                if gameWinEN = '1' then
+                    nextGameState <= WAIT_FOR_START;
+                elsif gameOverEN = '1' then
+                    nextGameState <= GAME_LOSE;
+                end if;
+            when GAME_WIN =>
+                countScaler <= countScaler + 100000;
+                score <= score + 1;
+                nextGameState <= WAIT_FOR_START;
+            when GAME_LOSE =>
+                score <= 0;
+                countScaler <= 0;
+                nextGameState <= WAIT_FOR_START;
+        end case;
+    end process;
 end architecture MemoryGame_ARCH;
