@@ -10,15 +10,26 @@ use work.Types_package.all;
 --Date: 
 --Prof: Scott Tippens
 --Desc: Number Checker component
+--      The component needs information about the gameState, essentially, how many 
+--      numbers are we currently trying to evaluate. 
 --      
---      
---      
+--      The component will output a pulse on one of three pins to indicate if 
+--      the user made all the correct entries or made an error.
+
+--      During the middle of the game, when 3 numbers for example, are entered correctly,
+--      the component outputs a nextRoundEN pulse, to tell the rest of the design
+--      that all the numbers have been entered and to start displaying 4 numbers now.
+
+--      When there are 5 numbers to check, the gameWinEN gets a pulse 
+--      if all are entered correctly.
+
+--      At any point a wrong number is made, gameOverEN gets a pulse.
 ------------------------------------------------------------------------------------
 
 
 entity NumberChecker is
     port(
-        switches : in std_logic_vector(15 downto 0);
+        switches : in std_logic_vector(15 downto 0); --the pulsed user inputs go here
 
         number0 : in std_logic_vector(3 downto 0);
         number1 : in std_logic_vector(3 downto 0);
@@ -26,8 +37,11 @@ entity NumberChecker is
         number3 : in std_logic_vector(3 downto 0);
         number4 : in std_logic_vector(3 downto 0);
 
-        readMode : in std_logic;
-        gameState : in GameStates_t;
+        readMode : in std_logic;     -- pull this port low when there is displaying happening
+
+        gameState : in GameStates_t; -- tell this component how many numbers we need to check
+                                     -- this port could also just be a vector or anything that tells
+                                     -- NumberChecker what round we're on.
 
         clock : in std_logic;
         reset : in std_logic;
@@ -48,7 +62,7 @@ architecture NumberChecker_ARCH of NumberChecker is
     signal num3 : integer range 0 to 16; 
     signal num4 : integer range 0 to 16; 
 begin
-   
+
     with switches select
         compare <= 1 when "0000000000000001",
                    2 when "0000000000000010",
@@ -87,6 +101,14 @@ begin
             gameOverEN <= '0';
             gameWinEN <= '0';
 
+            -- based on the current round count, this structure will 
+            -- look sequentially at each user input. If at any point the 
+            -- user inputs a mismatch, the component throws a lose puse from
+            -- the GameOverEN pin.
+
+            -- if the user can make all correct entries, then the component throws 
+            -- a pulse from the nextRoundEN pin. If all numbers were correct, then
+            -- gameWinEN gets a pulse.
             if (readMode = '1') and (to_integer(unsigned(switches)) > 0) then
 
                 case gameState is
