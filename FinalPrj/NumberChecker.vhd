@@ -54,13 +54,13 @@ end entity NumberChecker;
 
 architecture NumberChecker_ARCH of NumberChecker is
     signal compare : integer range 0 to 16;
-    signal latch : std_logic;
 
     signal num0 : integer range 0 to 16; 
     signal num1 : integer range 0 to 16; 
     signal num2 : integer range 0 to 16; 
     signal num3 : integer range 0 to 16; 
     signal num4 : integer range 0 to 16; 
+
 begin
 
     with switches select
@@ -90,12 +90,14 @@ begin
 
 
    CHECK_NUMBERS : process(clock, reset)
+    variable progressCounter : natural range 1 to 5;
+    
    begin
         if reset = '1' then
             nextRoundEN <= '0';
             gameOverEN <= '0';
             gameWinEN <= '0';
-            latch <= '0';
+            progressCounter := 1;
         elsif rising_edge(clock) then
             nextRoundEN <= '0';
             gameOverEN <= '0';
@@ -135,75 +137,108 @@ begin
                         end if;
 
                     when ROUND2 =>
-                        if compare = num0 then
-                            latch <= '1';
-                        elsif latch = '1' then
+                        if progressCounter = 1 then
+                            if compare = num0 then
+                                progressCounter := progressCounter + 1;
+                            else
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 2 then
                             if compare = num1 then
                                 nextRoundEN <= '1';
-                                latch <= '0';
-                            else gameOverEN <= '1'; end if;
-                        else gameOverEN <= '1'; end if;
+                                progressCounter := 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        end if;
 
                     when ROUND3 =>
-                        if compare = num0 then
-                            latch <= '1';
-                        elsif latch = '1' then
+                        if progressCounter = 1 then
+                            if compare = num0 then
+                                progressCounter := progressCounter + 1;
+                            else
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 2 then
                             if compare = num1 then
-                                latch <= '1';
-                            elsif latch = '1' then
-                                if compare = num2 then
-                                    nextRoundEN <= '1';
-                                    latch <= '0';
-                                else gameOverEN <= '1'; end if;
-                            else gameOverEN <= '1'; end if;
-                        else gameOverEN <= '1'; end if;                       
+                                progressCounter := progressCounter + 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 3 then
+                            if compare = num2 then
+                                nextRoundEN <= '1';
+                                progressCounter :=  1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        end if;
 
                     when ROUND4 =>
-                        if compare = num0 then
-                            latch <= '1';
-                        elsif latch = '1' then
+                        if progressCounter = 1 then
+                            if compare = num0 then
+                                progressCounter := progressCounter + 1;
+                            else
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 2 then
                             if compare = num1 then
-                                latch <= '1';
-                            elsif latch = '1' then
-                                if compare = num2 then
-                                    latch <= '1';
-                                elsif latch = '1' then
-                                    if compare = num3 then
-                                        nextRoundEN <= '1';
-                                        latch <= '0';
-                                    else gameOverEN <= '1'; end if;
-                                else gameOverEN <= '1'; end if;
-                            else gameOverEN <= '1'; end if;
-                        else gameOverEN <= '1'; end if;                       
-                       
+                                progressCounter := progressCounter + 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 3 then
+                            if compare = num2 then
+                                progressCounter :=  progressCounter + 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 4 then
+                            if compare = num3 then
+                                nextRoundEN <= '1';
+                                progressCounter :=  1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        end if;
 
                     when ROUND5 =>
-                        if compare = num0 then
-                            latch <= '1';
-                        elsif latch = '1' then
+                        if progressCounter = 1 then
+                            if compare = num0 then
+                                progressCounter := progressCounter + 1;
+                            else
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 2 then
                             if compare = num1 then
-                                latch <= '1';
-                            elsif latch = '1' then
-                                if compare = num2 then
-                                    latch <= '1';
-                                elsif latch = '1' then
-                                    if compare = num3 then
-                                        latch <= '1';
-                                    elsif latch = '1' then
-                                        if compare = num4 then
-                                            gameWinEN <= '1';
-                                            latch <= '0';
-                                        else gameOverEN <= '1'; end if;
-                                    else gameOverEN <= '1'; end if;
-                                else gameOverEN <= '1'; end if;
-                            else gameOverEN <= '1'; end if;
-                        else gameOverEN <= '1'; end if;                       
+                                progressCounter := progressCounter + 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 3 then
+                            if compare = num2 then
+                                progressCounter :=  progressCounter + 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 4 then
+                            if compare = num3 then
+                                progressCounter :=  progressCounter + 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        elsif progressCounter = 5 then
+                            if compare = num4 then
+                                gameWinEN <= '1';
+                                progressCounter := 1;
+                            else 
+                                gameOverEN <= '1';
+                            end if;
+                        end if;
 
                 end case;
             end if;
         end if;
-    
    end process;
-
 
 end architecture NumberChecker_ARCH;

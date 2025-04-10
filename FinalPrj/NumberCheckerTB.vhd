@@ -40,13 +40,13 @@ architecture Behavioral of NumberCheckerTB is
     --Signals 
     ------------------------------------------------------------------------------------
     signal switches    :   std_logic_vector(15 downto 0) := "0000000000000000";
-    signal number0     :   std_logic_vector(3 downto 0) := "0000";
-    signal number1     :   std_logic_vector(3 downto 0) := "0010";
-    signal number2     :   std_logic_vector(3 downto 0) := "0011";
-    signal number3     :   std_logic_vector(3 downto 0) := "0100";
-    signal number4     :   std_logic_vector(3 downto 0) := "0101";
+    signal number0     :   std_logic_vector(3 downto 0);
+    signal number1     :   std_logic_vector(3 downto 0);
+    signal number2     :   std_logic_vector(3 downto 0);
+    signal number3     :   std_logic_vector(3 downto 0);
+    signal number4     :   std_logic_vector(3 downto 0);
     signal readMode    :   std_logic := '1';
-    signal gameState   :   GameStates_t := NUM3;
+    signal gameState   :   GameStates_t := ROUND5;
     signal clock       :   std_logic := '1';
 
     signal reset       :   std_logic;
@@ -56,6 +56,11 @@ architecture Behavioral of NumberCheckerTB is
 
 begin
 
+    number0 <= std_logic_vector(to_unsigned(5, 4));
+    number1 <= std_logic_vector(to_unsigned(5, 4));
+    number2 <= std_logic_vector(to_unsigned(12, 4));
+    number3 <= std_logic_vector(to_unsigned(14, 4));
+    number4 <= std_logic_vector(to_unsigned(5, 4));
     ------------------------------------------------------------------------------------
     -- Component instantiation into UUT
     ------------------------------------------------------------------------------------
@@ -103,32 +108,33 @@ begin
     ------------------------------------------------------------------------------------
     STIMULUS : process
     begin
-        wait for 20 ps;
+        wait until rising_edge(clock);
+        wait until rising_edge(clock);
 
-        switches <= "0000000000000001";
-        wait for 20 ps;
-        switches <= "0000000000000000";
-        wait for 20 ps;
+        switches(5) <= '1';
+        wait until rising_edge(clock);
+        switches(5) <= '0';
+        wait until rising_edge(clock);
 
-        switches <= "0000000000000100";
-        wait for 20 ps;
-        switches <= "0000000000000000";
-        wait for 20 ps;
+        switches(5) <= '1';
+        wait until rising_edge(clock);
+        switches(5) <= '0';
+        wait until rising_edge(clock);
 
-        switches <= "0000000000001000";
-        wait for 20 ps;
-        switches <= "0000000000000000";
-        wait for 20 ps;
+        switches(12) <= '1';
+        wait until rising_edge(clock);
+        switches(12) <= '0';
+        wait until rising_edge(clock);
 
-        switches <= "0000000000010000";
-        wait for 20 ps;
-        switches <= "0000000000000000";
-        wait for 20 ps;
+        switches(14) <= '1';
+        wait until rising_edge(clock);
+        switches(14) <= '0';
+        wait until rising_edge(clock);
 
-        switches <= "0000000000100000";
-        wait for 20 ps;
-        switches <= "0000000000000000";
-        wait for 20 ps;
+        switches(5) <= '1';
+        wait until rising_edge(clock);
+        switches(5) <= '0';
+        wait until rising_edge(clock);
 
 
 

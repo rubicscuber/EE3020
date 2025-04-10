@@ -39,6 +39,23 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     ------------------------------------------------------------------------------------
     --component definitions
     ------------------------------------------------------------------------------------
+    component MemoryGame
+        port(
+            switches         : in  std_logic_vector(15 downto 0);
+
+            start            : in  std_logic;
+
+            clock            : in  std_logic;
+            reset            : in  std_logic;
+
+            leds             : out std_logic_vector(15 downto 0);
+
+            outputGameNumber : out std_logic_vector(7 downto 0);
+            outputScore      : out std_logic_vector(7 downto 0);
+
+            blanks           : out std_logic_vector(3 downto 0)
+        );
+    end component MemoryGame;
 
     component SevenSegmentDriver is
         port(
@@ -60,24 +77,6 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
         );
     end component;
 
-    component BCD is 
-        port(
-            binary4Bit : in std_logic_vector(3 downto 0);
-
-            decimalOnes : out std_logic_vector(3 downto 0);
-            decimalTens : out std_logic_vector(3 downto 0)
-        );
-    end component;
-
-    component BarLedDriver_Basys3
-        port(
-            binary4Bit : in  std_logic_vector(3 downto 0);
-            outputEN : in std_logic;
-
-            leds : out std_logic_vector(15 downto 0)
-        );
-    end component BarLedDriver_Basys3;
-
     component SynchronizerChain is
         generic (CHAIN_SIZE: positive);
         port (
@@ -89,9 +88,7 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     end component;
 
     component Debouncer is
-        generic(
-            DELAY_COUNT : positive
-        );
+        generic( DELAY_COUNT : positive);
         port(
             bitIn : in std_logic;
             clock : in std_logic;
@@ -109,40 +106,6 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
             pulseOut:  out std_logic
         );
     end component;
-
-    ------------------------------------------------------------------------------------
-    --internal signals and constants this list will change depending on design component
-    ------------------------------------------------------------------------------------
-    --each number is displayed once per second
-    constant TPS_MAX_COUNT : integer := 50; --change to 100M before synthesis
-    signal tpsToggle : std_logic;
-    signal tpsToggleShift : std_logic;
-    signal tpsModeControl : std_logic;
-
-    --signals that connect the ports to each DFF
-    signal number0Signal : std_logic_vector(3 downto 0);
-    signal number1Signal : std_logic_vector(3 downto 0);
-    signal number2Signal : std_logic_vector(3 downto 0);
-    signal number3Signal : std_logic_vector(3 downto 0);
-    signal number4Signal : std_logic_vector(3 downto 0);
-
-    --registers of the 5 numbers
-    signal number0Register : std_logic_vector(3 downto 0);
-    signal number1Register : std_logic_vector(3 downto 0);
-    signal number2Register : std_logic_vector(3 downto 0);
-    signal number3Register : std_logic_vector(3 downto 0);
-    signal number4Register : std_logic_vector(3 downto 0);
-
-    --state machine types
-    signal currentState : GameStates_t; 
-    signal nextState : GameStates_t; 
-
-    --one pulse wide ready signal
-    signal readyEN : std_logic;
-
-    --signal after the INPUT_SYNC process
-    signal generateEN : std_logic;
-    signal generateEN_sync : std_logic;
 
     -------------------------------------------------------------------------------
     -- synchronized 16 bit wide vector of switches
@@ -162,16 +125,30 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     -------------------------------------------------------------------------------
     --signals for SevenSegmentDriver component
     -------------------------------------------------------------------------------
-    signal digit3 : std_logic_vector(3 downto 0);
-    signal digit2 : std_logic_vector(3 downto 0);
-    signal digit1 : std_logic_vector(3 downto 0);
-    signal digit0 : std_logic_vector(3 downto 0);
     signal blanks : std_logic_vector(3 downto 0);
+    signal outputScore : std_logic_vector(7 downto 0);
+    signal outputGameNumber : std_logic_vector(7 downto 0);
     
 
     begin------------------------------------------------------------------------------begin
 
+    MemoryGame_inst : component MemoryGame
+        port map(
+            switches         => pulsedSwitches,
 
+            start            => startButtonPulsed,
+
+            clock            => clk,
+            reset            => btnD,
+
+            leds             => led,
+
+            outputGameNumber => outputGameNumber,
+            outputScore      => outputScore,
+            
+            blanks           => blanks
+        );
+    
     ------------------------------------------------------------------------------------
     --component insantiations
     ------------------------------------------------------------------------------------
@@ -179,10 +156,10 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
         reset     => btnD,
         clock     => clk,
 
-        digit3    => digit3,
-        digit2    => digit2,
-        digit1    => digit1,
-        digit0    => digit0,
+        digit3    => outputScore(7 downto 4),
+        digit2    => outputScore(3 downto 0),
+        digit1    => outputGameNumber(7 downto 4),
+        digit0    => outputGameNumber(3 downto 0),
 
         blank3    => blanks(3),
         blank2    => blanks(2),
@@ -230,7 +207,7 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     -- make each switch pulse, once per activation, reset once the switch is down
     ------------------------------------------------------------------------------------
     PULSE : for i in 0 to NUM_OF_SWITCHES-1 generate
-        PULSE_x : component LevelDetector
+        PULSE_X : component LevelDetector
             port map(
                 reset    => btnD,
                 clock    => clk,
@@ -238,6 +215,7 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
                 pulseOut => pulsedSwitches(i) --all switches now pulse controlled
             );
     end generate;        
+
 
     START_BUTTON_SYNC : SynchronizerChain
         generic map(
@@ -247,8 +225,8 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
             reset   => btnD,
             clock   => clk,
             asyncIn => btnC,
-            syncOut => startButtonSync
-        );
+            syncOut => startButtonSync --start button is now synced
+    );
 
     START_BUTTON_DEBOUNCE : component Debouncer
         generic map(
@@ -258,44 +236,15 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
             bitIn        => startButtonSync,
             clock        => clk,
             reset        => btnD,
-            debouncedOut => startButtonDebounced
-        );
+            debouncedOut => startButtonDebounced --start button is now debounced
+    );
 
-    START_BUTTON_PULSE : LevelDetector
+    START_BUTTON_PULSE : LevelDetector 
         port map(
             reset    => btnD,
             clock    => clk,
             trigger  => startButtonDebounced,
-            pulseOut => startButtonPulsed
-        );
+            pulseOut => startButtonPulsed --start button is now pulsed
+    );
     
-    
-    
-
---    ------------------------------------------------------------------------------------
---    -- Shift each number from the RNG_GENERATOR to a storage register. 
---    -- Ignore the readyEN pulse if we are currently traversing the states.
---    --
---    -- If the RNG_GENERATOR is trying to send new numbers and the state machine has
---    -- not finnished its path, the output of RNG_GENERATOR is ignored.
---    ------------------------------------------------------------------------------------
---    LOAD_IN_NUMBERS : process(clk, btnD)
---    begin
---        if btnD = '1' then
---            number0Register <= (others => '0');
---            number1Register <= (others => '0');
---            number2Register <= (others => '0');
---            number3Register <= (others => '0');
---            number4Register <= (others => '0');
---       elsif falling_edge(clk) then
---            if readyEN = '1' and currentState = WAIT_FOR_READY then
---                number0Register <= number0Signal;
---                number1Register <= number1Signal;
---                number2Register <= number2Signal;
---                number3Register <= number3Signal;
---                number4Register <= number4Signal;
---            end if;
---       end if;
---    end process;
-
 end MemoryGame_Basys3_ARCH;

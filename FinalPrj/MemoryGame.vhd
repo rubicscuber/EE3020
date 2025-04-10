@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.types_package.all;
+use work.Types_package.all;
 
 ------------------------------------------------------------------------------------
 --Title: 
@@ -24,11 +24,12 @@ entity MemoryGame is
         clock : in std_logic;
         reset : in std_logic;
 
-        --add more ports here
         leds : out std_logic_vector(15 downto 0);
-        outputScore : out std_logic_vector(4 downto 0)
 
+        outputGameNumber : out std_logic_vector(7 downto 0);
+        outputScore : out std_logic_vector(7 downto 0);
 
+        blanks : out std_logic_vector(3 downto 0)
     );
 end entity MemoryGame;
 
@@ -104,13 +105,18 @@ architecture MemoryGame_ARCH of MemoryGame is
         );
     end component BarLedDriver_Basys3;
 
+    component BCD
+        port(
+            binary4Bit  : in  std_logic_vector(3 downto 0);
+            decimalOnes : out std_logic_vector(3 downto 0);
+            decimalTens : out std_logic_vector(3 downto 0)
+        );
+    end component BCD;
+
     --general signals for design
     signal tpsToggle : std_logic;
     signal tpsModeControl : std_logic;
     signal tpsToggleShift : std_logic;
-
-    --signals to control display
-    signal blanks : std_logic_vector(3 downto 0);
 
     --signals for RNG_GENERATOR
     signal readyEN : std_logic;
@@ -123,7 +129,6 @@ architecture MemoryGame_ARCH of MemoryGame is
     
     --signals for number checker
     signal readMode : std_logic;
-    signal gameState : GameStates_t;
     signal nextRoundEN : std_logic;
     signal gameOverEN : std_logic;
     signal gameWinEN : std_logic;
@@ -138,9 +143,15 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal nextDisplayState : DisplayStates_t;
 
     --signals keeping track of game related stats
-    signal countScaler : integer; --countScaler must decrement every gameWinEN pulse
-    signal score : integer;
-    constant MAX_COUNT : integer := 1000000;
+    --countScaler += SCALE_AMOUNT at end of each game
+    signal countScaler : integer range 0 to 50; --1000000
+    constant SCALE_AMOUNT : integer := 1; --100000
+    
+    signal score : integer range 0 to 15;
+
+    --if counter >= (MAX_COUNT - countScaler) then toggle and reset counter
+    constant MAX_COUNT : integer := 5; --1000000;
+
     signal winPatternIsBusy : std_logic;
     signal losePatternIsBusy : std_logic;
     signal inputControl : std_logic;
@@ -173,7 +184,7 @@ begin
         number4     => number4,
 
         readMode    => readMode,
-        gameState   => gameState,
+        gameState   => currentGameState,
 
         clock       => clock,
         reset       => reset,
@@ -185,7 +196,7 @@ begin
     
     WIN_PATTERN_DRIVER : component WinPattern
         generic map(
-            BLINK_COUNT => (100000000/4)-1
+            BLINK_COUNT => 1 --(100000000/4)-1
         )
         port map(
             winPatternEN     => gameWinEN,
@@ -197,7 +208,7 @@ begin
     
     LOSE_PATTERN_DRRIVER : LosePattern
         generic map(
-            BLINK_COUNT => (100000000/4)-1
+            BLINK_COUNT => 1 --(100000000/4)-1
         )
         port map(
             losePatternEN     => gameOverEN,
@@ -213,6 +224,17 @@ begin
         leds       => leds
     );
     
+    SCORE_NUMBER_BCD : BCD port map(
+        binary4Bit  => std_logic_vector(to_unsigned(score, 4)),
+        decimalOnes => outputScore(3 downto 0),
+        decimalTens => outputScore(7 downto 4)
+    );
+    
+    GAME_NUMBER_BCD : BCD port map(
+            binary4Bit  => outputNumber,
+            decimalOnes => outputGameNumber(3 downto 0),
+            decimalTens => outputGameNumber(7 downto 4)
+    );
     
 
     TPS_TOGGLER : process(clock, reset)
@@ -257,16 +279,18 @@ begin
         end if;
     end process;
 
+
     ------------------------------------------------------------------------------------
     -- State machine responsible for driving the main number output
     ------------------------------------------------------------------------------------
-    DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, tpsToggle, tpsToggleShift)
+    DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, tpsToggle, tpsToggleShift,
+                            nextRoundEN, currentGameState)
     begin
         case (currentDisplayState) Is
             ------------------------------------------BLANK
             when IDLE =>
                 tpsModeControl <= '0';     --turn off counter and reset it
-                blanks <= (others => '1'); --deactivate segments
+                blanks <= "0011";          --deactivate segments
                 ledMode <= '0';            --deactivate leds
                 readMode <= '1';
                 if readyEN = '1' or nextRoundEN = '1' then      
@@ -274,13 +298,14 @@ begin
                 else 
                     nextDisplayState <= IDLE;
                 end if;
-            -------------------------------------------ROUND1
+
+            ------------------------------------------NUM1
             when NUM1 =>
                 tpsModeControl <= '1';
                 readMode <= '0';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
-                    blanks <= "1100";          --activate segments
+                    blanks <= (others => '0'); --activate segments
                     outputNumber <= number0;
                     nextDisplayState <= NUM1;
                 elsif tpsToggle = '1' then
@@ -290,23 +315,24 @@ begin
                         nextDisplayState <= NUM2;
                     end if;
                 end if;
+
             -------------------------------------------ROUND2
             when NUM2 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
-                    blanks <= "1100";          --activate segments
+                    blanks <= (others => '0'); --activate segments
                     outputNumber <= number1;
                     nextDisplayState <= NUM2;
-                elsif tpsToggle = '1' then
-                    ledMode <= '0';
-                    blanks <= (others => '0');
+                elsif tpsToggle = '1' then     
+                    ledMode <= '0';            --deactivate leds
+                    blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1') and (tpsToggleShift = '0') then
                     if currentGameState = ROUND2 then
                         nextDisplayState <= IDLE;
                     else
-                        nextDisplayState <= NUM2;
+                        nextDisplayState <= NUM3;
                     end if;
                 end if;
 
@@ -315,12 +341,12 @@ begin
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
-                    blanks <= "1100";          --activate segments
+                    blanks <= (others => '0'); --activate segments
                     outputNumber <= number2;
                     nextDisplayState <= NUM3;
-                elsif tpsToggle = '1' then
+                elsif tpsToggle = '1' then     
                     ledMode <= '0';            --deactivate leds
-                    blanks <= (others => '1'); --deactivate segments
+                    blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
                     if currentGameState = ROUND3 then
@@ -329,17 +355,18 @@ begin
                         nextDisplayState <= NUM4;
                     end if;
                 end if;
+
             -------------------------------------------ROUND4
             when NUM4 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
-                    blanks <= "1100";          --activate segments
+                    blanks <= (others => '0'); --activate segments
                     outputNumber <= number3;
                     nextDisplayState <= NUM4;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
-                    blanks <= (others => '1'); --deactivate segments
+                    blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
                     if currentGameState = ROUND4 then
@@ -348,17 +375,18 @@ begin
                         nextDisplayState <= NUM5;
                     end if;
                 end if;
+
             -------------------------------------------ROUND5
             when NUM5 =>
                 tpsModeControl <= '1';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
-                    blanks <= "1100";          --activate segments
+                    blanks <= (others => '0'); --activate segments
                     outputNumber <= number4;
                     nextDisplayState <= NUM5;
                 elsif tpsToggle = '1' then
                     ledMode <= '0';            --deactivate leds
-                    blanks <= (others => '1'); --deactivate segments
+                    blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
                     nextDisplayState <= IDLE;
@@ -416,12 +444,12 @@ begin
                 end if;
             when ROUND5 =>
                 if gameWinEN = '1' then
-                    nextGameState <= WAIT_FOR_START;
+                    nextGameState <= GAME_WIN;
                 elsif gameOverEN = '1' then
                     nextGameState <= GAME_LOSE;
                 end if;
             when GAME_WIN =>
-                countScaler <= countScaler + 100000;
+                countScaler <= countScaler + SCALE_AMOUNT;
                 score <= score + 1;
                 nextGameState <= WAIT_FOR_START;
             when GAME_LOSE =>
