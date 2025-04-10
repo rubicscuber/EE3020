@@ -144,23 +144,27 @@ architecture MemoryGame_ARCH of MemoryGame is
 
     --signals keeping track of game related stats
     --countScaler += SCALE_AMOUNT at end of each game
-    signal countScaler : integer range 0 to 50; --1000000
-    constant SCALE_AMOUNT : integer := 1; --100000
+    signal countScaler : integer range 0 to 100000000; --50
+    constant SCALE_AMOUNT : integer := 10000000; --1
     
     signal score : integer range 0 to 15;
 
     --if counter >= (MAX_COUNT - countScaler) then toggle and reset counter
-    constant MAX_COUNT : integer := 5; --1000000;
+    constant MAX_COUNT : integer := 100000000; --10;
 
     signal winPatternIsBusy : std_logic;
     signal losePatternIsBusy : std_logic;
     signal inputControl : std_logic;
     
     signal outputNumber : std_logic_vector(3 downto 0);
+    signal startControl : std_logic;
+    
+    signal scoreVector : std_logic_vector(3 downto 0);
 
 begin
+    startControl <= start and inputControl and (not winPatternIsBusy) and (not losePatternIsBusy);
     RNG_GENERATOR : component RandomNumbers port map(
-        generateEN => start and inputControl and (not winPatternIsBusy) and (not losePatternIsBusy),
+        generateEN => startControl,
 
         clock      => clock,
         reset      => reset,
@@ -196,7 +200,7 @@ begin
     
     WIN_PATTERN_DRIVER : component WinPattern
         generic map(
-            BLINK_COUNT => 1 --(100000000/4)-1
+            BLINK_COUNT => (100000000/4)-1 --1
         )
         port map(
             winPatternEN     => gameWinEN,
@@ -208,7 +212,7 @@ begin
     
     LOSE_PATTERN_DRRIVER : LosePattern
         generic map(
-            BLINK_COUNT => 1 --(100000000/4)-1
+            BLINK_COUNT => (100000000/4)-1 --1
         )
         port map(
             losePatternEN     => gameOverEN,
@@ -224,8 +228,9 @@ begin
         leds       => leds
     );
     
+    scoreVector <= std_logic_vector(to_unsigned(score, 4));
     SCORE_NUMBER_BCD : BCD port map(
-        binary4Bit  => std_logic_vector(to_unsigned(score, 4)),
+        binary4Bit  => scoreVector,
         decimalOnes => outputScore(3 downto 0),
         decimalTens => outputScore(7 downto 4)
     );

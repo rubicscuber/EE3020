@@ -20,11 +20,10 @@ architecture Debouncer_ARCH of Debouncer is
     signal counter : integer range 0 to DELAY_COUNT;
     signal bitReg : std_logic;
 begin
-    SCAN_INPUT_STATE : process(clock, reset)
+    SCAN_INPUT : process(clock, reset)
     begin
         if reset = '1' then
             counter <= 0;
-            debouncedOut <= '0';
         elsif rising_edge(clock) then
             if bitIn /= bitReg and counter < DELAY_COUNT then
                 counter <= counter + 1;
