@@ -18,6 +18,7 @@ end entity Debouncer;
 
 architecture Debouncer_ARCH of Debouncer is
     signal counter : integer range 0 to DELAY_COUNT;
+    signal bitReg : std_logic;
 begin
     SCAN_INPUT_STATE : process(clock, reset)
     begin
@@ -25,15 +26,16 @@ begin
             counter <= 0;
             debouncedOut <= '0';
         elsif rising_edge(clock) then
-            if bitIn /= debouncedOut and counter < DELAY_COUNT then
+            if bitIn /= bitReg and counter < DELAY_COUNT then
                 counter <= counter + 1;
             elsif counter <= DELAY_COUNT then
-                debouncedOut <= bitIn;
+                bitReg <= bitIn;
                 counter <= 0;
             else
                 counter <= 0;
             end if;
         end if;
     end process;
+    debouncedOut <= bitReg;
 end architecture Debouncer_ARCH;
 
