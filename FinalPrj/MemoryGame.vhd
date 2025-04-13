@@ -144,13 +144,13 @@ architecture MemoryGame_ARCH of MemoryGame is
 
     --signals keeping track of game related stats
     --countScaler += SCALE_AMOUNT at end of each game
-    signal countScaler : integer range 0 to 100000000; --50
-    constant SCALE_AMOUNT : integer := 10000000; --1
+    signal countScaler : integer range 0 to 1_000_000; --50
+    constant SCALE_AMOUNT : integer := 100_000; --1
     
     signal score : integer range 0 to 15;
 
     --if counter >= (MAX_COUNT - countScaler) then toggle and reset counter
-    constant MAX_COUNT : integer := 100000000; --10;
+    constant MAX_COUNT : integer := 100_000_000; --10;
 
     signal winPatternIsBusy : std_logic;
     signal losePatternIsBusy : std_logic;

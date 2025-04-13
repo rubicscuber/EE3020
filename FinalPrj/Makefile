@@ -13,12 +13,20 @@ all:
 	@$(GHDL) -a $(FLAGS) BCD.vhd
 	@$(GHDL) -a $(FLAGS) MemoryGame.vhd
 	@$(GHDL) -a $(FLAGS) MemoryGameTB.vhd
+	@$(GHDL) -a $(FLAGS) SevenSegmentDriver.vhd
+	@$(GHDL) -a $(FLAGS) SyncChain.vhd
+	@$(GHDL) -a $(FLAGS) LevelDetector.vhd
+	@$(GHDL) -a $(FLAGS) Debouncer.vhd
 
+	@$(GHDL) -a $(FLAGS) MemoryGame_Basys3.vhd
+	@$(GHDL) -a $(FLAGS) WrapperTB.vhd
 
-	@$(GHDL) -e $(FLAGS) MemoryGameTB
+#	@$(GHDL) -e $(FLAGS) MemoryGameTB
 #	@$(GHDL) -e $(FLAGS) NumberCheckerTB
+	@$(GHDL) -e $(FLAGS) WrapperTB
 
 #	@$(GHDL) -r $(FLAGS) NumberCheckerTB --wave=NumberCheckerWAVE.ghw --stop-time=1us
 #	@$(GHDL) -r $(FLAGS) PatternTB --wave=PatternWAVE.ghw --stop-time=1us
-	@$(GHDL) -r $(FLAGS) MemoryGameTB --wave=MAIN_WAVE.ghw --stop-time=10us
+#	@$(GHDL) -r $(FLAGS) MemoryGameTB --wave=MAIN_WAVE.ghw --stop-time=10us
+	@$(GHDL) -r $(FLAGS) WrapperTB --wave=WrapperWave.ghw --stop-time=100ms
 
