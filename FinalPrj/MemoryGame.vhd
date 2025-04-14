@@ -426,7 +426,7 @@ begin
             when WAIT_FOR_START =>
                 inputControl <= '1';
                 if readyEN = '1' then
-                    nextGameState <= ROUND1;
+                    nextGameState <= ROUND5;
                 end if;
             when ROUND1 =>
                 inputControl <= '0';
