@@ -8,11 +8,12 @@ end entity ;
 
 architecture behavioral of WrapperTB is
 
+    --note generaic map of this component MUST match the entity in MemoryGame_Basys3.vhd
     component MemoryGame_Basys3 is
     generic(
         NUM_OF_SWITCHES : positive := 16;
         CHAIN_SIZE : positive := 2;
-        DELAY_COUNT : positive := 100000 --10ms on a 100MHz clock = 1M
+        DELAY_COUNT : positive := 1_000_000 --10ms on a 100MHz clock = 1M
         );
     port(
         sw : in std_logic_vector(NUM_OF_SWITCHES-1 downto 0);
@@ -26,8 +27,8 @@ architecture behavioral of WrapperTB is
     );
     end component;
 
-    signal sw   : std_logic_vector(15 downto 0);
-    signal btnC : std_logic;
+    signal sw   : std_logic_vector(15 downto 0) := (others => '0');
+    signal btnC : std_logic := '0';
     signal btnD : std_logic;
     signal clk  : std_logic;
 
@@ -38,11 +39,6 @@ architecture behavioral of WrapperTB is
 begin
 
     UUT : MemoryGame_Basys3 
-        generic map(
-            NUM_OF_SWITCHES => 16,
-            CHAIN_SIZE => 2,
-            DELAY_COUNT => 100000
-        )
         port map(
 
             sw   =>  sw,
@@ -79,10 +75,25 @@ begin
 
     stumulus : process is
     begin
-        wait for 1 ms;
+        wait for 1.2 ms;
         btnC <= '1';
-        wait for 4 ms;
+        --wait for 200 ns;
+        --btnC <= '0';
+        --wait until rising_edge(clk);
+        --wait until rising_edge(clk);
+        --wait until rising_edge(clk);
+        --btnC <= '1';
+        --wait for 300 ns;
+        --btnC <= '0';
+        --wait for 100 ns;
+        --btnC <= '1';
+        wait for 1.1 ms;
         btnC <= '0';
+        
+        sw(9) <= '1';
+        wait for 1.1 ms;
+        sw(9) <= '0';
+
         wait;
     end process;
 

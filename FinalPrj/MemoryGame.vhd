@@ -142,15 +142,16 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal currentDisplayState : DisplayStates_t;
     signal nextDisplayState : DisplayStates_t;
 
-    --signals keeping track of game related stats
-    --countScaler += SCALE_AMOUNT at end of each game
-    signal countScaler : integer range 0 to 100_000; --50
-    constant SCALE_AMOUNT : integer := 1_000; --1
-    
-    signal score : integer range 0 to 15;
+    --this is subtracted from the toggling counter, making in toggle faster
+    signal countScaler : integer range 0 to 90_000_000; 
 
-    --if counter >= (MAX_COUNT - countScaler) then toggle and reset counter
-    constant MAX_COUNT : integer := 10_000; --10;
+    --the ammount added to count countScaler after each win
+    constant SCALE_AMOUNT : integer := 15_000_000;
+    
+    --the absolute max rate that the numbers can flash
+    constant MAX_TOGGLE_COUNT : integer := 100_000_000; --10;
+
+    signal score : integer range 0 to 15;
 
     signal winPatternIsBusy : std_logic;
     signal losePatternIsBusy : std_logic;
@@ -243,7 +244,7 @@ begin
     
 
     TPS_TOGGLER : process(clock, reset)
-        variable counter : integer; 
+        variable counter : integer range 0 to MAX_TOGGLE_COUNT; 
     begin
         if reset = '1' then
             counter := 0;
@@ -251,7 +252,7 @@ begin
         elsif rising_edge(clock) then
             if tpsModeControl = '1' then
                 counter := counter + 1;
-                if counter >= (MAX_COUNT - countScaler) then
+                if counter >= (MAX_TOGGLE_COUNT - countScaler) then
                     tpsToggle <= not tpsToggle;
                     counter := 0;
                 end if;

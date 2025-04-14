@@ -18,7 +18,7 @@ entity MemoryGame_Basys3 is
     generic(
         NUM_OF_SWITCHES : positive := 16;
         CHAIN_SIZE : positive := 2;
-        DELAY_COUNT : positive := 100000 --10ms on a 100MHz clock = 1M
+        DELAY_COUNT : positive := 1_000_000 --10ms on a 100MHz clock = 1M
         );
     port(
         sw : in std_logic_vector(NUM_OF_SWITCHES-1 downto 0);
@@ -132,7 +132,7 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
     begin------------------------------------------------------------------------------begin
 
-    MemoryGame_inst : component MemoryGame
+    MEMORY_GAME : component MemoryGame
         port map(
             switches         => pulsedSwitches,
 

@@ -27,7 +27,7 @@ begin
         elsif rising_edge(clock) then
             if bitIn /= bitReg and counter < DELAY_COUNT then
                 counter <= counter + 1;
-            elsif counter <= DELAY_COUNT then
+            elsif counter >= DELAY_COUNT then
                 bitReg <= bitIn;
                 counter <= 0;
             else
