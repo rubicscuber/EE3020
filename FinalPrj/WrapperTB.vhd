@@ -75,24 +75,10 @@ begin
 
     stumulus : process is
     begin
-        wait for 1.2 ms;
+        wait for 3 ms;
         btnC <= '1';
-        --wait for 200 ns;
-        --btnC <= '0';
-        --wait until rising_edge(clk);
-        --wait until rising_edge(clk);
-        --wait until rising_edge(clk);
-        --btnC <= '1';
-        --wait for 300 ns;
-        --btnC <= '0';
-        --wait for 100 ns;
-        --btnC <= '1';
-        wait for 1.1 ms;
+        wait for 3 ms;
         btnC <= '0';
-        
-        sw(9) <= '1';
-        wait for 1.1 ms;
-        sw(9) <= '0';
 
         wait;
     end process;

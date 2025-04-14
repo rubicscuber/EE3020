@@ -36,6 +36,15 @@ end entity MemoryGame;
 
 architecture MemoryGame_ARCH of MemoryGame is
 
+    --this is subtracted from the toggling counter, making in toggle faster
+    signal countScaler : integer range 0 to 90_000_000; 
+
+    --the ammount added to count countScaler after each win
+    constant SCALE_AMOUNT : integer := 15_000_000;
+    
+    --the absolute max rate that the numbers can flash
+    constant MAX_TOGGLE_COUNT : integer := 100_000_000; --10;
+
     component RandomNumbers is
         port(
             generateEN : in  std_logic;
@@ -142,15 +151,6 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal currentDisplayState : DisplayStates_t;
     signal nextDisplayState : DisplayStates_t;
 
-    --this is subtracted from the toggling counter, making in toggle faster
-    signal countScaler : integer range 0 to 90_000_000; 
-
-    --the ammount added to count countScaler after each win
-    constant SCALE_AMOUNT : integer := 15_000_000;
-    
-    --the absolute max rate that the numbers can flash
-    constant MAX_TOGGLE_COUNT : integer := 100_000_000; --10;
-
     signal score : integer range 0 to 15;
 
     signal winPatternIsBusy : std_logic;
@@ -201,7 +201,7 @@ begin
     
     WIN_PATTERN_DRIVER : component WinPattern
         generic map(
-            BLINK_COUNT => (100000000/4)-1 --1
+            BLINK_COUNT => 25_000_000 - 1 --quarter second sequence
         )
         port map(
             winPatternEN     => gameWinEN,
@@ -213,7 +213,7 @@ begin
     
     LOSE_PATTERN_DRRIVER : LosePattern
         generic map(
-            BLINK_COUNT => (100000000/4)-1 --1
+            BLINK_COUNT => 25_000_000 - 1 --quarter second sequence
         )
         port map(
             losePatternEN     => gameOverEN,
@@ -290,7 +290,7 @@ begin
     -- State machine responsible for driving the main number output
     ------------------------------------------------------------------------------------
     DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, tpsToggle, tpsToggleShift,
-                            nextRoundEN, currentGameState)
+                            nextRoundEN, currentGameState, number0, number1, number2, number3, number4)
     begin
         case (currentDisplayState) Is
             ------------------------------------------BLANK
@@ -415,7 +415,8 @@ begin
     ------------------------------------------------------------------------------------
     -- Game state machine
     ------------------------------------------------------------------------------------
-    GAME_STATE_MACHINE : process (currentGameState, readyEN, nextRoundEN, gameOverEN, gameWinEN)
+    GAME_STATE_MACHINE : process (currentGameState, readyEN, nextRoundEN, 
+                                  gameOverEN, gameWinEN, countScaler, score)
     begin
         case(currentGameState) is
             when WAIT_FOR_START =>
@@ -431,34 +432,40 @@ begin
                     nextGameState <= GAME_LOSE;
                 end if;
             when ROUND2 =>
+                inputControl <= '0';
                 if nextRoundEN = '1' then
                     nextGameState <= ROUND3;
                 elsif gameOverEN = '1' then
                     nextGameState <= GAME_LOSE;
                 end if;
             when ROUND3 =>
+                inputControl <= '0';
                 if nextRoundEN = '1' then
                     nextGameState <= ROUND4;
                 elsif gameOverEN = '1' then
                     nextGameState <= GAME_LOSE;
                 end if;
             when ROUND4 =>
+                inputControl <= '0';
                 if nextRoundEN = '1' then
                     nextGameState <= ROUND5;
                 elsif gameOverEN = '1' then
                     nextGameState <= GAME_LOSE;
                 end if;
             when ROUND5 =>
+                inputControl <= '0';
                 if gameWinEN = '1' then
                     nextGameState <= GAME_WIN;
                 elsif gameOverEN = '1' then
                     nextGameState <= GAME_LOSE;
                 end if;
             when GAME_WIN =>
+                inputControl <= '0';
                 countScaler <= countScaler + SCALE_AMOUNT;
                 score <= score + 1;
                 nextGameState <= WAIT_FOR_START;
             when GAME_LOSE =>
+                inputControl <= '0';
                 score <= 0;
                 countScaler <= 0;
                 nextGameState <= WAIT_FOR_START;
