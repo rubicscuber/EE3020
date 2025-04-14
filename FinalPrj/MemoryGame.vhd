@@ -430,36 +430,36 @@ begin
             when WAIT_FOR_START =>
                 inputControl <= '1';
                 if readyEN = '1' then
-                    nextGameState <= ROUND1;
-                end if;
-            when ROUND1 =>
-                inputControl <= '0';
-                if nextRoundEN = '1' then
-                    nextGameState <= ROUND2;
-                elsif gameOverEN = '1' then
-                    nextGameState <= GAME_LOSE;
-                end if;
-            when ROUND2 =>
-                inputControl <= '0';
-                if nextRoundEN = '1' then
-                    nextGameState <= ROUND3;
-                elsif gameOverEN = '1' then
-                    nextGameState <= GAME_LOSE;
-                end if;
-            when ROUND3 =>
-                inputControl <= '0';
-                if nextRoundEN = '1' then
-                    nextGameState <= ROUND4;
-                elsif gameOverEN = '1' then
-                    nextGameState <= GAME_LOSE;
-                end if;
-            when ROUND4 =>
-                inputControl <= '0';
-                if nextRoundEN = '1' then
                     nextGameState <= ROUND5;
-                elsif gameOverEN = '1' then
-                    nextGameState <= GAME_LOSE;
                 end if;
+--            when ROUND1 =>
+--                inputControl <= '0';
+--                if nextRoundEN = '1' then
+--                    nextGameState <= ROUND2;
+--                elsif gameOverEN = '1' then
+--                    nextGameState <= GAME_LOSE;
+--                end if;
+--            when ROUND2 =>
+--                inputControl <= '0';
+--                if nextRoundEN = '1' then
+--                    nextGameState <= ROUND3;
+--                elsif gameOverEN = '1' then
+--                    nextGameState <= GAME_LOSE;
+--                end if;
+--            when ROUND3 =>
+--                inputControl <= '0';
+--                if nextRoundEN = '1' then
+--                    nextGameState <= ROUND4;
+--                elsif gameOverEN = '1' then
+--                    nextGameState <= GAME_LOSE;
+--                end if;
+--            when ROUND4 =>
+--                inputControl <= '0';
+--                if nextRoundEN = '1' then
+--                    nextGameState <= ROUND5;
+--                elsif gameOverEN = '1' then
+--                    nextGameState <= GAME_LOSE;
+--                end if;
             when ROUND5 =>
                 inputControl <= '0';
                 if gameWinEN = '1' then
@@ -477,6 +477,9 @@ begin
                 score <= 0;
                 countScaler <= 0;
                 nextGameState <= WAIT_FOR_START;
+            when others =>
+                nextGameState <= ROUND5;
+
         end case;
     end process;
 end architecture MemoryGame_ARCH;
