@@ -75,6 +75,7 @@ begin
 
             when PATTERN1 =>
                 leds <= PATTERN1_LEDS;
+                winPatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN0;
                 else

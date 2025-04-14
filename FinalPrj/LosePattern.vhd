@@ -103,6 +103,7 @@ begin
 
             when PATTERN1 =>
                 leds <= PATTERN1_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN2;
                 else
@@ -111,6 +112,7 @@ begin
 
             when PATTERN2 =>
                 leds <= PATTERN2_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN3;
                 else
@@ -119,6 +121,7 @@ begin
 
             when PATTERN3 =>
                 leds <= PATTERN3_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN4;
                 else
@@ -127,6 +130,7 @@ begin
 
             when PATTERN4 =>
                 leds <= PATTERN4_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN5;
                 else
@@ -135,6 +139,7 @@ begin
 
             when PATTERN5 =>
                 leds <= PATTERN5_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN6;
                 else
@@ -143,6 +148,7 @@ begin
 
             when PATTERN6 =>
                 leds <= PATTERN6_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN7;
                 else
@@ -151,6 +157,7 @@ begin
 
             when PATTERN7 =>
                 leds <= PATTERN7_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN8;
                 else
@@ -159,6 +166,7 @@ begin
 
             when PATTERN8 =>
                 leds <= PATTERN8_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN9;
                 else
@@ -167,6 +175,7 @@ begin
 
             when PATTERN9 =>
                 leds <= PATTERN9_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN10;
                 else
@@ -175,6 +184,7 @@ begin
 
             when PATTERN10 =>
                 leds <= PATTERN10_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN11;
                 else
@@ -183,6 +193,7 @@ begin
 
             when PATTERN11 =>
                 leds <= PATTERN11_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN12;
                 else
@@ -191,6 +202,7 @@ begin
 
             when PATTERN12 =>
                 leds <= PATTERN12_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN13;
                 else
@@ -199,6 +211,7 @@ begin
 
             when PATTERN13 =>
                 leds <= PATTERN13_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= PATTERN14;
                 else
@@ -207,6 +220,7 @@ begin
 
             when PATTERN14 =>
                 leds <= PATTERN14_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN15;
                 else
@@ -215,6 +229,7 @@ begin
 
             when PATTERN15 =>
                 leds <= PATTERN15_LEDS;
+                losePatternIsBusy <= ACTIVE;
                 if (stateMachineControl = ACTIVE) then
                     nextState <= BLANK;
                 else
