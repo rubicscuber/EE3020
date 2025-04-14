@@ -325,6 +325,7 @@ begin
             -------------------------------------------ROUND2
             when NUM2 =>
                 tpsModeControl <= '1';
+                readMode <= '0';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= (others => '0'); --activate segments
@@ -345,6 +346,7 @@ begin
             -------------------------------------------ROUND3
             when NUM3 =>
                 tpsModeControl <= '1';
+                readMode <= '0';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= (others => '0'); --activate segments
@@ -365,6 +367,7 @@ begin
             -------------------------------------------ROUND4
             when NUM4 =>
                 tpsModeControl <= '1';
+                readMode <= '0';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= (others => '0'); --activate segments
@@ -385,6 +388,7 @@ begin
             -------------------------------------------ROUND5
             when NUM5 =>
                 tpsModeControl <= '1';
+                readMode <= '0';
                 if tpsToggle = '0' then
                     ledMode <= '1';            --activate leds
                     blanks <= (others => '0'); --activate segments
