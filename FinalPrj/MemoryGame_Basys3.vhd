@@ -134,7 +134,8 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
     MEMORY_GAME : component MemoryGame
         port map(
-            switches         => pulsedSwitches,
+            --switches         => pulsedSwitches,
+            switches         => debouncedSwitches,
 
             start            => startButtonPulsed,
 
@@ -203,18 +204,18 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
             );
     end generate;
 
-    ------------------------------------------------------------------------------------
-    -- make each switch pulse, once per activation, reset once the switch is down
-    ------------------------------------------------------------------------------------
-    PULSE : for i in 0 to NUM_OF_SWITCHES-1 generate
-        PULSE_X : component LevelDetector
-            port map(
-                reset    => btnD,
-                clock    => clk,
-                trigger  => debouncedSwitches(i),
-                pulseOut => pulsedSwitches(i) --all switches now pulse controlled
-            );
-    end generate;        
+    --------------------------------------------------------------------------------------
+    ---- make each switch pulse, once per activation, reset once the switch is down
+    --------------------------------------------------------------------------------------
+    --PULSE : for i in 0 to NUM_OF_SWITCHES-1 generate
+    --    PULSE_X : component LevelDetector
+    --        port map(
+    --            reset    => btnD,
+    --            clock    => clk,
+    --            trigger  => debouncedSwitches(i),
+    --            pulseOut => pulsedSwitches(i) --all switches now pulse controlled
+    --        );
+    --end generate;        
 
 
     START_BUTTON_SYNC : SynchronizerChain

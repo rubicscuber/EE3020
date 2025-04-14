@@ -13,7 +13,7 @@ architecture behavioral of WrapperTB is
     generic(
         NUM_OF_SWITCHES : positive := 16;
         CHAIN_SIZE : positive := 2;
-        DELAY_COUNT : positive := 1_000_000 --10ms on a 100MHz clock = 1M
+        DELAY_COUNT : positive := 1_000 --10ms on a 100MHz clock = 1M
         );
     port(
         sw : in std_logic_vector(NUM_OF_SWITCHES-1 downto 0);
@@ -75,10 +75,24 @@ begin
 
     stumulus : process is
     begin
-        wait for 3 ms;
+        wait for 1.9 ms;
         btnC <= '1';
-        wait for 3 ms;
+        wait for 500 us;
         btnC <= '0';
+        
+        wait for 1 ms;
+        sw(5) <= '1';
+        wait for 500 us;
+        sw(5) <= '0';
+
+        wait for 2.7 ms;
+        sw(5) <= '1';
+        wait for 500 us;
+        sw(5) <= '0';
+        wait for 500 us;
+        sw(10) <= '1';
+        wait for 500 us;
+        sw(10) <= '0';
 
         wait;
     end process;

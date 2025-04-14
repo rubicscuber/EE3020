@@ -143,6 +143,7 @@ begin
                                 progressCounter <= progressCounter + 1;
                             else
                                 gameOverEN <= '1';
+                                progressCounter <= 1;
                             end if;
                         elsif progressCounter = 2 then
                             if compare = num1 then

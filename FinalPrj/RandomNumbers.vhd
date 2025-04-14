@@ -46,7 +46,7 @@ architecture RandomNumbers_ARCH of RandomNumbers is
     constant maxSubCount_Length     : integer   := 3;   -- Length of the subCount signal within RandCounter component
 
     constant MAX_SUB_COUNT_0 : integer   := 3;   -- Max value for sub counter 1
-    constant MAX_SUB_COUNT_1 : integer   := 6;   -- Max value for sub counter 2
+    constant MAX_SUB_COUNT_1 : integer   := 1;   -- Max value for sub counter 2
     constant MAX_SUB_COUNT_2 : integer   := 2;   -- Max value for sub counter 3
     constant MAX_SUB_COUNT_3 : integer   := 5;   -- Max value for sub counter 4
     constant MAX_SUB_COUNT_4 : integer   := 4;   -- Max value for sub counter 5
