@@ -315,6 +315,10 @@ begin
                     outputNumber <= number0;
                     nextDisplayState <= NUM1;
                 elsif tpsToggle = '1' then
+                    ledMode <= '0';            --deactivate leds
+                    blanks <= "0011";          --deactivate segments
+                end if;
+                if (tpsToggle = '1') and (tpsToggleShift = '0') then
                     if currentGameState = ROUND1 then
                         nextDisplayState <= IDLE;
                     else
