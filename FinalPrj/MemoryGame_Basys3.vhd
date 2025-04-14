@@ -132,23 +132,22 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
     begin------------------------------------------------------------------------------begin
 
-    MEMORY_GAME : component MemoryGame
-        port map(
-            switches         => pulsedSwitches,
+    MEMORY_GAME : component MemoryGame port map(
+        switches         => pulsedSwitches,
 
-            start            => startButtonPulsed,
+        start            => startButtonPulsed,
 
-            clock            => clk,
-            reset            => btnD,
+        clock            => clk,
+        reset            => btnD,
 
-            leds             => led,
+        leds             => led,
 
-            outputGameNumber => outputGameNumber,
-            outputScore      => outputScore,
-            
-            blanks           => blanks
-        );
-    
+        outputGameNumber => outputGameNumber,
+        outputScore      => outputScore,
+        
+        blanks           => blanks
+    );
+
     ------------------------------------------------------------------------------------
     --component insantiations
     ------------------------------------------------------------------------------------
