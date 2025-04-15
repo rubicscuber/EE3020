@@ -164,7 +164,8 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal scoreVector : std_logic_vector(3 downto 0);
 
 begin
-    startControl <= start and inputControl and (not winPatternIsBusy) and (not losePatternIsBusy);
+    --startControl <= start and inputControl and (not winPatternIsBusy) and (not losePatternIsBusy);
+    startControl <= start and (not winPatternIsBusy) and (not losePatternIsBusy);
     RNG_GENERATOR : component RandomNumbers port map(
         generateEN => startControl,
 

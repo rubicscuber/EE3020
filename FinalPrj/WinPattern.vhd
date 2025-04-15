@@ -64,13 +64,13 @@ begin
             when PATTERN0 =>
                 leds <= PATTERN0_LEDS;
                 winPatternIsBusy <= ACTIVE;
-                if loopCounter = 8 then
-                    nextState <= BLANK;
+                if loopCounter < 8 then
+                    nextState <= PATTERN0;
                 elsif (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN1;
                     loopCounter := loopCounter + 1;
                 else
-                    nextState <= PATTERN0;
+                    nextState <= BLANK;
                 end if;
 
             when PATTERN1 =>
