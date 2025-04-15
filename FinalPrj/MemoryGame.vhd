@@ -145,7 +145,7 @@ architecture MemoryGame_ARCH of MemoryGame is
 
     --game state signals
     --signal currentGameState : GameStates_t;
-    signal currentGameState : GameStates_t := ROUND5;
+    signal currentGameState : GameStates_t;
     signal nextGameState : GameStates_t;
 
     --display state signals
@@ -409,16 +409,17 @@ begin
         end case;
     end process;
 
+    currentGameState <= ROUND5;
     GAME_DRIVER : process (clock, reset)
     begin
         if reset = '1' then
             score <= 0;
             countScaler <= 0;
         elsif rising_edge(clock) then
-            if gameWinEN then
+            if gameWinEN  = '1' then
                 score <= score + 1;
             end if;
-            if gameOverEN then
+            if gameOverEN = '1' then
                 score <= 0;
             end if;
         end if;
