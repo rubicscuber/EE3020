@@ -144,7 +144,8 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal ledMode : std_logic;
 
     --game state signals
-    signal currentGameState : GameStates_t;
+    --signal currentGameState : GameStates_t;
+    signal currentGameState : GameStates_t := ROUND5;
     signal nextGameState : GameStates_t;
 
     --display state signals
@@ -408,78 +409,92 @@ begin
         end case;
     end process;
 
-    ------------------------------------------------------------------------------------
-    -- Game state register
-    ------------------------------------------------------------------------------------
-    GAME_STATE_REG : process(clock, reset)
+    GAME_DRIVER : process (clock, reset)
     begin
         if reset = '1' then
-            currentGameState <= WAIT_FOR_START;
+            score <= 0;
+            countScaler <= 0;
         elsif rising_edge(clock) then
-            currentGameState <= nextGameState;
+            if gameWinEN then
+                score <= score + 1;
+            end if;
+            if gameOverEN then
+                score <= 0;
+            end if;
         end if;
     end process;
+--    ------------------------------------------------------------------------------------
+--    -- Game state register
+--    ------------------------------------------------------------------------------------
+--    GAME_STATE_REG : process(clock, reset)
+--    begin
+--        if reset = '1' then
+--            currentGameState <= WAIT_FOR_START;
+--        elsif rising_edge(clock) then
+--            currentGameState <= nextGameState;
+--        end if;
+--    end process;
 
-    ------------------------------------------------------------------------------------
-    -- Game state machine
-    ------------------------------------------------------------------------------------
-    GAME_STATE_MACHINE : process (currentGameState, readyEN, nextRoundEN, 
-                                  gameOverEN, gameWinEN, countScaler, score)
-    begin
-        case(currentGameState) is
-            when WAIT_FOR_START =>
-                inputControl <= '1';
-                if readyEN = '1' then
-                    nextGameState <= ROUND5;
-                end if;
---            when ROUND1 =>
---                inputControl <= '0';
---                if nextRoundEN = '1' then
---                    nextGameState <= ROUND2;
---                elsif gameOverEN = '1' then
---                    nextGameState <= GAME_LOSE;
---                end if;
---            when ROUND2 =>
---                inputControl <= '0';
---                if nextRoundEN = '1' then
---                    nextGameState <= ROUND3;
---                elsif gameOverEN = '1' then
---                    nextGameState <= GAME_LOSE;
---                end if;
---            when ROUND3 =>
---                inputControl <= '0';
---                if nextRoundEN = '1' then
---                    nextGameState <= ROUND4;
---                elsif gameOverEN = '1' then
---                    nextGameState <= GAME_LOSE;
---                end if;
---            when ROUND4 =>
---                inputControl <= '0';
---                if nextRoundEN = '1' then
+--    ------------------------------------------------------------------------------------
+--    -- Game state machine
+--    ------------------------------------------------------------------------------------
+--    GAME_STATE_MACHINE : process (currentGameState, readyEN, nextRoundEN, 
+--                                  gameOverEN, gameWinEN, countScaler, score)
+--    begin
+--        case(currentGameState) is
+--            when WAIT_FOR_START =>
+--                inputControl <= '1';
+--                if readyEN = '1' then
 --                    nextGameState <= ROUND5;
+--                end if;
+----            when ROUND1 =>
+----                inputControl <= '0';
+----                if nextRoundEN = '1' then
+----                    nextGameState <= ROUND2;
+----                elsif gameOverEN = '1' then
+----                    nextGameState <= GAME_LOSE;
+----                end if;
+----            when ROUND2 =>
+----                inputControl <= '0';
+----                if nextRoundEN = '1' then
+----                    nextGameState <= ROUND3;
+----                elsif gameOverEN = '1' then
+----                    nextGameState <= GAME_LOSE;
+----                end if;
+----            when ROUND3 =>
+----                inputControl <= '0';
+----                if nextRoundEN = '1' then
+----                    nextGameState <= ROUND4;
+----                elsif gameOverEN = '1' then
+----                    nextGameState <= GAME_LOSE;
+----                end if;
+----            when ROUND4 =>
+----                inputControl <= '0';
+----                if nextRoundEN = '1' then
+----                    nextGameState <= ROUND5;
+----                elsif gameOverEN = '1' then
+----                    nextGameState <= GAME_LOSE;
+----                end if;
+--            when ROUND5 =>
+--                inputControl <= '0';
+--                if gameWinEN = '1' then
+--                    nextGameState <= GAME_WIN;
 --                elsif gameOverEN = '1' then
 --                    nextGameState <= GAME_LOSE;
 --                end if;
-            when ROUND5 =>
-                inputControl <= '0';
-                if gameWinEN = '1' then
-                    nextGameState <= GAME_WIN;
-                elsif gameOverEN = '1' then
-                    nextGameState <= GAME_LOSE;
-                end if;
-            when GAME_WIN =>
-                inputControl <= '0';
-                countScaler <= countScaler + SCALE_AMOUNT;
-                score <= score + 1;
-                nextGameState <= WAIT_FOR_START;
-            when GAME_LOSE =>
-                inputControl <= '0';
-                score <= 0;
-                countScaler <= 0;
-                nextGameState <= WAIT_FOR_START;
-            when others =>
-                nextGameState <= ROUND5;
-
-        end case;
-    end process;
+--            when GAME_WIN =>
+--                inputControl <= '0';
+--                countScaler <= countScaler + SCALE_AMOUNT;
+--                score <= score + 1;
+--                nextGameState <= WAIT_FOR_START;
+--            when GAME_LOSE =>
+--                inputControl <= '0';
+--                score <= 0;
+--                countScaler <= 0;
+--                nextGameState <= WAIT_FOR_START;
+--            when others =>
+--                nextGameState <= ROUND5;
+--
+--        end case;
+--    end process;
 end architecture MemoryGame_ARCH;
