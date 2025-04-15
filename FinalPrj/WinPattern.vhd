@@ -49,7 +49,7 @@ begin
     end process;
 
     WIN_PATTERN_SM: process(currentState, stateMachineControl, winPatternEN)
-    variable loopCounter : integer range 0 to 8;
+    variable loopCounter : integer;
     
     begin
         case CurrentState is
@@ -64,13 +64,13 @@ begin
             when PATTERN0 =>
                 leds <= PATTERN0_LEDS;
                 winPatternIsBusy <= ACTIVE;
-                if loopCounter < 8 then
-                    nextState <= PATTERN0;
+                if loopCounter > 8 then
+                    nextState <= BLANK;
                 elsif (stateMachineControl = not ACTIVE) then
                     nextState <= PATTERN1;
                     loopCounter := loopCounter + 1;
                 else
-                    nextState <= BLANK;
+                    nextState <= PATTERN0;
                 end if;
 
             when PATTERN1 =>
