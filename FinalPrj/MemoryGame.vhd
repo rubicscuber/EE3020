@@ -2,7 +2,7 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.Types_package.all;
+use work.Types_package.all; --TODO: remove types_package, only states needed are in the DISPLAY_STATE_MACHINE process
 
 ------------------------------------------------------------------------------------
 --Title: 
@@ -14,7 +14,6 @@ use work.Types_package.all;
 --      
 --      
 ------------------------------------------------------------------------------------
-
 
 entity MemoryGame is
     port(
@@ -144,9 +143,7 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal ledMode : std_logic;
 
     --game state signals
-    --signal currentGameState : GameStates_t;
     signal currentGameState : GameStates_t;
-    signal nextGameState : GameStates_t;
 
     --display state signals
     signal currentDisplayState : DisplayStates_t;
@@ -156,7 +153,6 @@ architecture MemoryGame_ARCH of MemoryGame is
 
     signal winPatternIsBusy : std_logic;
     signal losePatternIsBusy : std_logic;
-    signal inputControl : std_logic;
     
     signal outputNumber : std_logic_vector(3 downto 0);
     signal startControl : std_logic;
@@ -181,6 +177,8 @@ begin
         number4    => number4
     );
 
+    currentGameState <= ROUND5;
+
     CHECK_NUMBERS : component NumberChecker port map(
         switches    => switches,
 
@@ -191,7 +189,7 @@ begin
         number4     => number4,
 
         readMode    => readMode,
-        gameState   => currentGameState,
+        gameState   => currentGameState, --TODO: change this port and change NumberChecker functionality
 
         clock       => clock,
         reset       => reset,
@@ -244,7 +242,28 @@ begin
             decimalTens => outputGameNumber(7 downto 4)
     );
     
+    --TODO: increment the clock speed in this process
+    ------------------------------------------------------------------------------------
+    -- Process that increments score with each successful win
+    ------------------------------------------------------------------------------------   
+    GAME_DRIVER : process (clock, reset)
+    begin
+        if reset = '1' then
+            score <= 0;
+            countScaler <= 0;
+        elsif rising_edge(clock) then
+            if gameWinEN  = '1' then
+                score <= score + 1;
+            end if;
+            if gameOverEN = '1' then
+                score <= 0;
+            end if;
+        end if;
+    end process;
 
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     TPS_TOGGLER : process(clock, reset)
         variable counter : integer range 0 to MAX_TOGGLE_COUNT; 
     begin
@@ -266,6 +285,9 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    --
+    ------------------------------------------------------------------------------------
     TPS_TOGGLE_SHIFTER : process(clock, reset)
     begin
         if reset = '1' then
@@ -292,7 +314,7 @@ begin
     -- State machine responsible for driving the main number output
     ------------------------------------------------------------------------------------
     DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, tpsToggle, tpsToggleShift,
-                            nextRoundEN, currentGameState, number0, number1, number2, number3, number4)
+                                    number0, number1, number2, number3, number4)
     begin
         case (currentDisplayState) Is
             ------------------------------------------BLANK
@@ -301,10 +323,8 @@ begin
                 blanks <= "0011";          --deactivate segments
                 ledMode <= '0';            --deactivate leds
                 readMode <= '1';
-                if readyEN = '1' or nextRoundEN = '1' then      
+                if readyEN = '1' then
                     nextDisplayState <= NUM1;
-                else 
-                    nextDisplayState <= IDLE;
                 end if;
 
             ------------------------------------------NUM1
@@ -321,11 +341,7 @@ begin
                     blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1') and (tpsToggleShift = '0') then
-                    if currentGameState = ROUND1 then
-                        nextDisplayState <= IDLE;
-                    else
-                        nextDisplayState <= NUM2;
-                    end if;
+                    nextDisplayState <= NUM2;
                 end if;
 
             -------------------------------------------ROUND2
@@ -342,11 +358,7 @@ begin
                     blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1') and (tpsToggleShift = '0') then
-                    if currentGameState = ROUND2 then
-                        nextDisplayState <= IDLE;
-                    else
-                        nextDisplayState <= NUM3;
-                    end if;
+                    nextDisplayState <= NUM3;
                 end if;
 
             -------------------------------------------ROUND3
@@ -363,11 +375,7 @@ begin
                     blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    if currentGameState = ROUND3 then
-                        nextDisplayState <= IDLE;
-                    else
-                        nextDisplayState <= NUM4;
-                    end if;
+                    nextDisplayState <= NUM4;
                 end if;
 
             -------------------------------------------ROUND4
@@ -384,11 +392,7 @@ begin
                     blanks <= "0011";          --deactivate segments
                 end if;
                 if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    if currentGameState = ROUND4 then
-                        nextDisplayState <= IDLE;
-                    else
-                        nextDisplayState <= NUM5;
-                    end if;
+                    nextDisplayState <= NUM5;
                 end if;
 
             -------------------------------------------ROUND5
@@ -410,93 +414,6 @@ begin
         end case;
     end process;
 
-    currentGameState <= ROUND5;
-    GAME_DRIVER : process (clock, reset)
-    begin
-        if reset = '1' then
-            score <= 0;
-            countScaler <= 0;
-        elsif rising_edge(clock) then
-            if gameWinEN  = '1' then
-                score <= score + 1;
-            end if;
-            if gameOverEN = '1' then
-                score <= 0;
-            end if;
-        end if;
-    end process;
---    ------------------------------------------------------------------------------------
---    -- Game state register
---    ------------------------------------------------------------------------------------
---    GAME_STATE_REG : process(clock, reset)
---    begin
---        if reset = '1' then
---            currentGameState <= WAIT_FOR_START;
---        elsif rising_edge(clock) then
---            currentGameState <= nextGameState;
---        end if;
---    end process;
 
---    ------------------------------------------------------------------------------------
---    -- Game state machine
---    ------------------------------------------------------------------------------------
---    GAME_STATE_MACHINE : process (currentGameState, readyEN, nextRoundEN, 
---                                  gameOverEN, gameWinEN, countScaler, score)
---    begin
---        case(currentGameState) is
---            when WAIT_FOR_START =>
---                inputControl <= '1';
---                if readyEN = '1' then
---                    nextGameState <= ROUND5;
---                end if;
-----            when ROUND1 =>
-----                inputControl <= '0';
-----                if nextRoundEN = '1' then
-----                    nextGameState <= ROUND2;
-----                elsif gameOverEN = '1' then
-----                    nextGameState <= GAME_LOSE;
-----                end if;
-----            when ROUND2 =>
-----                inputControl <= '0';
-----                if nextRoundEN = '1' then
-----                    nextGameState <= ROUND3;
-----                elsif gameOverEN = '1' then
-----                    nextGameState <= GAME_LOSE;
-----                end if;
-----            when ROUND3 =>
-----                inputControl <= '0';
-----                if nextRoundEN = '1' then
-----                    nextGameState <= ROUND4;
-----                elsif gameOverEN = '1' then
-----                    nextGameState <= GAME_LOSE;
-----                end if;
-----            when ROUND4 =>
-----                inputControl <= '0';
-----                if nextRoundEN = '1' then
-----                    nextGameState <= ROUND5;
-----                elsif gameOverEN = '1' then
-----                    nextGameState <= GAME_LOSE;
-----                end if;
---            when ROUND5 =>
---                inputControl <= '0';
---                if gameWinEN = '1' then
---                    nextGameState <= GAME_WIN;
---                elsif gameOverEN = '1' then
---                    nextGameState <= GAME_LOSE;
---                end if;
---            when GAME_WIN =>
---                inputControl <= '0';
---                countScaler <= countScaler + SCALE_AMOUNT;
---                score <= score + 1;
---                nextGameState <= WAIT_FOR_START;
---            when GAME_LOSE =>
---                inputControl <= '0';
---                score <= 0;
---                countScaler <= 0;
---                nextGameState <= WAIT_FOR_START;
---            when others =>
---                nextGameState <= ROUND5;
---
---        end case;
---    end process;
+
 end architecture MemoryGame_ARCH;
