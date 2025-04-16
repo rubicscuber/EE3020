@@ -299,161 +299,128 @@ begin
 --        end if;
 --    end process;
 
-    ------------------------------------------------------------------------------------
-    -- The state register keeps the state machine synchronized with the clock.
-    ------------------------------------------------------------------------------------
-    DISPLAY_STATE_REG : process(clock, reset)
-    begin
-        if reset = '1' then
-            currentDisplayState <= IDLE;
-        elsif rising_edge(clock) then
-            currentDisplayState <= nextDisplayState;
-        end if;
-    end process;
+--    ------------------------------------------------------------------------------------
+--    -- The state register keeps the state machine synchronized with the clock.
+--    ------------------------------------------------------------------------------------
+--    DISPLAY_STATE_REG : process(clock, reset)
+--    begin
+--        if reset = '1' then
+--            currentDisplayState <= IDLE;
+--        elsif rising_edge(clock) then
+--            currentDisplayState <= nextDisplayState;
+--        end if;
+--    end process;
 
     DISPLAY_SM_TIMER : process(clock,reset)
         variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;
+        variable countMode : std_logic;
     begin
         if reset = '1' then
             SMTimer <= 0;
             counter := 0;
+            countMode := '0';
         elsif rising_edge(clock) then
-            if tpsModeControl = '1' then
+            if readyEN = '1' then
+                countMode := '1'; --latch in and start counting
+            end if;
+
+            if countMode = '1' then
                 counter := counter + 1;
                 if (counter >= (MAX_TOGGLE_COUNT - 1)) then
                     SMTimer <= SMTimer + 1;
                     counter := 0;
                 end if;
-            elsif tpsModeControl = '0' then
-                counter := 0;
+            elsif countMode = '0' then
                 SMTimer <= 0;
+                counter := 0;
             end if;
+
+            if SMTimer = 10 then
+                SMTimer <= 0;
+                countMode := '0';
+                counter := 0;
+            end if;
+
         end if;
     end process;
     ------------------------------------------------------------------------------------
     -- State machine responsible for driving the main number output
     ------------------------------------------------------------------------------------
-    DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, SMTimer,
-                                    number0, number1, number2, number3, number4)
+    DISPLAY_SM : process(SMTimer, number0, number1, number2, number3, number4) is
     begin
-        case (currentDisplayState) Is
+        case (SMTimer) is
             ------------------------------------------------------------------BLANK
-            when IDLE =>
-                tpsModeControl <= '0';     --turn off counter and reset it
-                blanks <= "0011";          --deactivate segments
-                ledMode <= '0';            --deactivate leds
-                readMode <= '1';
-                if readyEN = '1' then
-                    nextDisplayState <= NUM1;
-                end if;
+            when 0 =>
+                readMode <= '1';                --allow the start button to be pressed
+                ledMode <= '0';                 --deactivate leds
+                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM1
-            when NUM1 =>
-                tpsModeControl <= '1';
+            when 1 =>
                 readMode <= '0';
+                ledMode <= '1';                 --activate leds
+                blanks <= (others => '0');      --activate segments
                 outputNumber <= number0;
-                if (SMTimer = 0) then
-                    ledMode <= '1';                 --activate leds
-                    blanks <= (others => '0');      --activate segments
-                    nextDisplayState <= NUM1;   --stay 
-                elsif (SMTimer = 1) then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM2;   --move 
-                else
-                    nextDisplayState <= NUM1;   --handle metavalues
-                end if;
+
+            ------------------------------------------------------------------BLANK
+            when 2 =>
+                readMode <= '0';
+                ledMode <= '0';                 --deactivate leds
+                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM2
-            when NUM2 =>
-                tpsModeControl <= '1';
+            when 3 =>
                 readMode <= '0';
+                ledMode <= '1';                 --activate leds
+                blanks <= (others => '0');      --activate segments
                 outputNumber <= number1;
-                if (SMTimer = 2) then
-                    ledMode <= '1';                 --activate leds
-                    blanks <= (others => '0');      --activate segments
-                    nextDisplayState <= NUM2;   --stay 
-                elsif (SMTimer = 1) then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM2;   --stay 
-                elsif (SMTimer = 3) then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM3;   --move
-                else
-                    nextDisplayState <= NUM2;   --handle metavalues
-                end if;
 
+            ------------------------------------------------------------------BLANK
+            when 4 =>
+                readMode <= '0';
+                ledMode <= '0';                 --deactivate leds
+                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM3
-            when NUM3 =>
-                tpsModeControl <= '1';
+            when 5 =>
                 readMode <= '0';
+                ledMode <= '1';                 --activate leds
+                blanks <= (others => '0');      --activate segments
                 outputNumber <= number2;
-                if (SMTimer = 4) then
-                    ledMode <= '1';                 --activate leds
-                    blanks <= (others => '0');      --activate segments
-                    nextDisplayState <= NUM3;   --stay 
-                elsif SMTimer = 3 then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM3;   --stay 
-                elsif SMTimer = 5 then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM4;   --move
-                else
-                    nextDisplayState <= NUM3;   --handle metavalues
-                end if;
 
+            ------------------------------------------------------------------BLANK
+            when 6 =>
+                readMode <= '0';
+                ledMode <= '0';                 --deactivate leds
+                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM4
-            when NUM4 =>
-                tpsModeControl <= '1';
+            when 7 =>
                 readMode <= '0';
+                ledMode <= '1';                 --activate leds
+                blanks <= (others => '0');      --activate segments
                 outputNumber <= number3;
-                if (SMTimer = 6) then
-                    ledMode <= '1';                 --activate leds
-                    blanks <= (others => '0');      --activate segments
-                    nextDisplayState <= NUM4;   --stay 
-                elsif SMTimer = 5 then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM4;   --stay 
-                elsif SMTimer = 7 then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM5;   --move 
-                else
-                    nextDisplayState <= NUM4;   --handle metavalues
-                end if;
 
+            ------------------------------------------------------------------BLANK
+            when 8 =>
+                readMode <= '0';
+                ledMode <= '0';                 --deactivate leds
+                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM5
-            when NUM5 =>
-                tpsModeControl <= '1';
+            when 9 =>
                 readMode <= '0';
+                ledMode <= '1';                 --activate leds
+                blanks <= (others => '0');      --activate segments
                 outputNumber <= number4;
-                if (SMTimer = 8) then
-                    ledMode <= '1';                 --activate leds
-                    blanks <= (others => '0');      --activate segments
-                    nextDisplayState <= NUM5;   --stay 
-                elsif SMTimer = 7 then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= NUM5;   --stay 
-                elsif SMTimer = 9 then
-                    ledMode <= '0';                 --deactivate leds
-                    blanks <= "0011";               --deactivate segments
-                    nextDisplayState <= IDLE;   --move 
-                else
-                    nextDisplayState <= NUM5;   --handle metavalues
-                end if;
 
-        end case;
+            ------------------------------------------------------------------DEFAULT
+            when others =>
+                readMode <= '0';
+                ledMode <= '0';
+                blanks <= (others => '1');
+
+            end case;
     end process;
-
-
 
 end architecture MemoryGame_ARCH;
