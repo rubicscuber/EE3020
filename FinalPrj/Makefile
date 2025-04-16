@@ -26,12 +26,12 @@ all:
 	@$(GHDL) -a $(FLAGS) WrapperTB.vhd
 
 #	@$(GHDL) -e $(FLAGS) NumberCheckerTB
-	@$(GHDL) -e $(FLAGS) PatternTB
+#	@$(GHDL) -e $(FLAGS) PatternTB
 #	@$(GHDL) -e $(FLAGS) MemoryGameTB
-#	@$(GHDL) -e $(FLAGS) WrapperTB
+	@$(GHDL) -e $(FLAGS) WrapperTB
 
 #	@$(GHDL) -r $(FLAGS) NumberCheckerTB --wave=NumberCheckerWAVE.ghw --stop-time=1us
-	@$(GHDL) -r $(FLAGS) PatternTB --wave=PatternWAVE.ghw --stop-time=1us
+#	@$(GHDL) -r $(FLAGS) PatternTB --wave=PatternWAVE.ghw --stop-time=1us
 #	@$(GHDL) -r $(FLAGS) MemoryGameTB --wave=MAIN_WAVE.ghw --stop-time=10us
-#	@$(GHDL) -r $(FLAGS) WrapperTB --wave=WrapperWave.ghw --stop-time=25ms
+	@$(GHDL) -r $(FLAGS) WrapperTB --wave=WrapperWave.ghw --stop-time=10ms
 

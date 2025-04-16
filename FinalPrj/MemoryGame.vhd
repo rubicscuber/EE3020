@@ -36,13 +36,13 @@ end entity MemoryGame;
 architecture MemoryGame_ARCH of MemoryGame is
 
     --this is subtracted from the toggling counter, making in toggle faster
-    signal countScaler : integer range 0 to 90_000_000; 
+    signal countScaler : integer range 0 to 90_000; 
 
     --the ammount added to count countScaler after each win
-    constant SCALE_AMOUNT : integer := 15_000_000;
+    constant SCALE_AMOUNT : integer := 15_000;
     
     --the absolute max rate that the numbers can flash
-    constant MAX_TOGGLE_COUNT : integer := 100_000_000; --10;
+    constant MAX_TOGGLE_COUNT : integer := 100_000;
 
     component RandomNumbers is
         port(
@@ -159,6 +159,8 @@ architecture MemoryGame_ARCH of MemoryGame is
     
     signal scoreVector : std_logic_vector(3 downto 0);
 
+    signal SMTimer : integer;
+
 begin
     --startControl <= start and inputControl and (not winPatternIsBusy) and (not losePatternIsBusy);
     startControl <= start and (not winPatternIsBusy) and (not losePatternIsBusy);
@@ -261,41 +263,41 @@ begin
         end if;
     end process;
 
-    ------------------------------------------------------------------------------------
-    --
-    ------------------------------------------------------------------------------------
-    TPS_TOGGLER : process(clock, reset)
-        variable counter : integer range 0 to MAX_TOGGLE_COUNT; 
-    begin
-        if reset = '1' then
-            counter := 0;
-            tpsToggle <= '0';
-        elsif rising_edge(clock) then
-            if tpsModeControl = '1' then
-                counter := counter + 1;
-                if counter >= (MAX_TOGGLE_COUNT - countScaler) then
-                    tpsToggle <= not tpsToggle;
-                    counter := 0;
-                end if;
-            end if;
-            if tpsModeControl = '0' then
-                counter := 0;
-                tpsToggle <= '0';
-            end if;
-        end if;
-    end process;
-
-    ------------------------------------------------------------------------------------
-    --
-    ------------------------------------------------------------------------------------
-    TPS_TOGGLE_SHIFTER : process(clock, reset)
-    begin
-        if reset = '1' then
-            tpsToggleShift <= '0';
-        elsif rising_edge(clock) then
-            tpsToggleShift <= tpsToggle;
-        end if;
-    end process;
+--    ------------------------------------------------------------------------------------
+--    --
+--    ------------------------------------------------------------------------------------
+--    TPS_TOGGLER : process(clock, reset)
+--        variable counter : integer range 0 to MAX_TOGGLE_COUNT; 
+--    begin
+--        if reset = '1' then
+--            counter := 0;
+--            tpsToggle <= '0';
+--        elsif rising_edge(clock) then
+--            if tpsModeControl = '1' then
+--                counter := counter + 1;
+--                if counter >= (MAX_TOGGLE_COUNT - countScaler) then
+--                    tpsToggle <= not tpsToggle;
+--                    counter := 0;
+--                end if;
+--            end if;
+--            if tpsModeControl = '0' then
+--                counter := 0;
+--                tpsToggle <= '0';
+--            end if;
+--        end if;
+--    end process;
+--
+--    ------------------------------------------------------------------------------------
+--    --
+--    ------------------------------------------------------------------------------------
+--    TPS_TOGGLE_SHIFTER : process(clock, reset)
+--    begin
+--        if reset = '1' then
+--            tpsToggleShift <= '0';
+--        elsif rising_edge(clock) then
+--            tpsToggleShift <= tpsToggle;
+--        end if;
+--    end process;
 
     ------------------------------------------------------------------------------------
     -- The state register keeps the state machine synchronized with the clock.
@@ -309,15 +311,33 @@ begin
         end if;
     end process;
 
-
+    DISPLAY_SM_TIMER : process(clock,reset)
+        variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;
+    begin
+        if reset = '1' then
+            SMTimer <= 0;
+            counter := 0;
+        elsif rising_edge(clock) then
+            if tpsModeControl = '1' then
+                counter := counter + 1;
+                if (counter >= (MAX_TOGGLE_COUNT - 1)) then
+                    SMTimer <= SMTimer + 1;
+                    counter := 0;
+                end if;
+            elsif tpsModeControl = '0' then
+                counter := 0;
+                SMTimer <= 0;
+            end if;
+        end if;
+    end process;
     ------------------------------------------------------------------------------------
     -- State machine responsible for driving the main number output
     ------------------------------------------------------------------------------------
-    DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, tpsToggle, tpsToggleShift,
+    DISPLAY_STATE_MACHINE : process (currentDisplayState, readyEN, SMTimer,
                                     number0, number1, number2, number3, number4)
     begin
         case (currentDisplayState) Is
-            ------------------------------------------BLANK
+            ------------------------------------------------------------------BLANK
             when IDLE =>
                 tpsModeControl <= '0';     --turn off counter and reset it
                 blanks <= "0011";          --deactivate segments
@@ -327,90 +347,110 @@ begin
                     nextDisplayState <= NUM1;
                 end if;
 
-            ------------------------------------------NUM1
+            ------------------------------------------------------------------NUM1
             when NUM1 =>
                 tpsModeControl <= '1';
                 readMode <= '0';
-                if tpsToggle = '0' then
-                    ledMode <= '1';            --activate leds
-                    blanks <= (others => '0'); --activate segments
-                    outputNumber <= number0;
-                    nextDisplayState <= NUM1;
-                elsif tpsToggle = '1' then
-                    ledMode <= '0';            --deactivate leds
-                    blanks <= "0011";          --deactivate segments
-                end if;
-                if (tpsToggle = '1') and (tpsToggleShift = '0') then
-                    nextDisplayState <= NUM2;
+                outputNumber <= number0;
+                if (SMTimer = 0) then
+                    ledMode <= '1';                 --activate leds
+                    blanks <= (others => '0');      --activate segments
+                    nextDisplayState <= NUM1;   --stay 
+                elsif (SMTimer = 1) then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM2;   --move 
+                else
+                    nextDisplayState <= NUM1;   --handle metavalues
                 end if;
 
-            -------------------------------------------ROUND2
+            ------------------------------------------------------------------NUM2
             when NUM2 =>
                 tpsModeControl <= '1';
                 readMode <= '0';
-                if tpsToggle = '0' then
-                    ledMode <= '1';            --activate leds
-                    blanks <= (others => '0'); --activate segments
-                    outputNumber <= number1;
-                    nextDisplayState <= NUM2;
-                elsif tpsToggle = '1' then     
-                    ledMode <= '0';            --deactivate leds
-                    blanks <= "0011";          --deactivate segments
-                end if;
-                if (tpsToggle = '1') and (tpsToggleShift = '0') then
-                    nextDisplayState <= NUM3;
+                outputNumber <= number1;
+                if (SMTimer = 2) then
+                    ledMode <= '1';                 --activate leds
+                    blanks <= (others => '0');      --activate segments
+                    nextDisplayState <= NUM2;   --stay 
+                elsif (SMTimer = 1) then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM2;   --stay 
+                elsif (SMTimer = 3) then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM3;   --move
+                else
+                    nextDisplayState <= NUM2;   --handle metavalues
                 end if;
 
-            -------------------------------------------ROUND3
+
+            ------------------------------------------------------------------NUM3
             when NUM3 =>
                 tpsModeControl <= '1';
                 readMode <= '0';
-                if tpsToggle = '0' then
-                    ledMode <= '1';            --activate leds
-                    blanks <= (others => '0'); --activate segments
-                    outputNumber <= number2;
-                    nextDisplayState <= NUM3;
-                elsif tpsToggle = '1' then     
-                    ledMode <= '0';            --deactivate leds
-                    blanks <= "0011";          --deactivate segments
-                end if;
-                if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextDisplayState <= NUM4;
+                outputNumber <= number2;
+                if (SMTimer = 4) then
+                    ledMode <= '1';                 --activate leds
+                    blanks <= (others => '0');      --activate segments
+                    nextDisplayState <= NUM3;   --stay 
+                elsif SMTimer = 3 then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM3;   --stay 
+                elsif SMTimer = 5 then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM4;   --move
+                else
+                    nextDisplayState <= NUM3;   --handle metavalues
                 end if;
 
-            -------------------------------------------ROUND4
+
+            ------------------------------------------------------------------NUM4
             when NUM4 =>
                 tpsModeControl <= '1';
                 readMode <= '0';
-                if tpsToggle = '0' then
-                    ledMode <= '1';            --activate leds
-                    blanks <= (others => '0'); --activate segments
-                    outputNumber <= number3;
-                    nextDisplayState <= NUM4;
-                elsif tpsToggle = '1' then
-                    ledMode <= '0';            --deactivate leds
-                    blanks <= "0011";          --deactivate segments
-                end if;
-                if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextDisplayState <= NUM5;
+                outputNumber <= number3;
+                if (SMTimer = 6) then
+                    ledMode <= '1';                 --activate leds
+                    blanks <= (others => '0');      --activate segments
+                    nextDisplayState <= NUM4;   --stay 
+                elsif SMTimer = 5 then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM4;   --stay 
+                elsif SMTimer = 7 then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM5;   --move 
+                else
+                    nextDisplayState <= NUM4;   --handle metavalues
                 end if;
 
-            -------------------------------------------ROUND5
+
+            ------------------------------------------------------------------NUM5
             when NUM5 =>
                 tpsModeControl <= '1';
                 readMode <= '0';
-                if tpsToggle = '0' then
-                    ledMode <= '1';            --activate leds
-                    blanks <= (others => '0'); --activate segments
-                    outputNumber <= number4;
-                    nextDisplayState <= NUM5;
-                elsif tpsToggle = '1' then
-                    ledMode <= '0';            --deactivate leds
-                    blanks <= "0011";          --deactivate segments
+                outputNumber <= number4;
+                if (SMTimer = 8) then
+                    ledMode <= '1';                 --activate leds
+                    blanks <= (others => '0');      --activate segments
+                    nextDisplayState <= NUM5;   --stay 
+                elsif SMTimer = 7 then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= NUM5;   --stay 
+                elsif SMTimer = 9 then
+                    ledMode <= '0';                 --deactivate leds
+                    blanks <= "0011";               --deactivate segments
+                    nextDisplayState <= IDLE;   --move 
+                else
+                    nextDisplayState <= NUM5;   --handle metavalues
                 end if;
-                if (tpsToggle = '1' and tpsToggleShift = '0') then
-                    nextDisplayState <= IDLE;
-                end if;
+
         end case;
     end process;
 
