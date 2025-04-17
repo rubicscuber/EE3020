@@ -65,15 +65,16 @@ begin
                 displayLatch := '1';
             end if;
 
-            if loopCounter >= 8 then
-                displayMode <= '0';
-                displayLatch := '0';
-                winPatternIsBusy <= '0';
-                count := 0;
-            elsif loopCounter < 8 then
-                displayMode <= '1';
-                displayLatch := '1';
-                if displayLatch = '1' then
+            if displayLatch = '1' then
+                if loopCounter >= 8 then
+                    displayMode <= '0';
+                    displayLatch := '0';
+                    winPatternIsBusy <= '0';
+                    loopCounter := 0;
+                    count := 0;
+                elsif loopCounter < 8 then
+                    displayMode <= '1';
+                    displayLatch := '1';
                     winPatternIsBusy <= '1';
                     if (count >= BLINK_COUNT) then
                         count := 0;
@@ -83,7 +84,13 @@ begin
                         count := count + 1;
                     end if;
                 end if;
+            else
+                displayMode <= '0';
+                winPatternIsBusy <= '0';
+                loopCounter := 0;
+                count := 0;
             end if;
+
         end if;
     end process DISPLAY_RATE;
 

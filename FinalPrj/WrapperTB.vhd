@@ -80,33 +80,27 @@ begin
         wait for 500 us;
         btnC <= '0';
         
-        wait for 1 ms;
+        wait for 10 ms;
         sw(15) <= '1';
-        wait for 500 us;
+        wait for 200 us;
         sw(15) <= '0';
-
-        wait for 2.7 ms;
-        sw(15) <= '1';
-        wait for 500 us;
-        sw(15) <= '0';
-        wait for 500 us;
+        wait for 200 us;
         sw(14) <= '1';
-        wait for 500 us;
+        wait for 200 us;
         sw(14) <= '0';
-
-        wait for 5.5 ms;
-        sw(15) <= '1';
-        wait for 500 us;
-        sw(15) <= '0';
-        wait for 500 us;
-        sw(14) <= '1';
-        wait for 500 us;
-        sw(14) <= '0';
-        wait for 500 us;
+        wait for 200 us;
         sw(9) <= '1';
-        wait for 500 us;
+        wait for 200 us;
         sw(9) <= '0';
-
+        wait for 200 us;
+        sw(4) <= '1';
+        wait for 200 us;
+        sw(4) <= '0';
+        wait for 200 us;
+        sw(15) <= '1';
+        wait for 200 us;
+        sw(15) <= '0';
+ 
         wait;
     end process;
 
