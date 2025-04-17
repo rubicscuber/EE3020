@@ -162,9 +162,12 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal SMTimer : integer;
 
     signal loseMode : std_logic;
+    signal winMode : std_logic;
+
+    signal dummySignal : std_logic;
 
 begin
-    startControl <= start and readMode and (not winPatternIsBusy) and (not losePatternIsBusy);
+    startControl <= (start and readMode and (not losePatternIsBusy)) or nextRoundEN;
     RNG_GENERATOR : component RandomNumbers port map(
         generateEN => startControl,
 
@@ -197,7 +200,7 @@ begin
         clock       => clock,
         reset       => reset,
 
-        nextRoundEN => nextRoundEN,
+        nextRoundEN => dummySignal,
         gameOverEN  => gameOverEN,
         gameWinEN   => gameWinEN
     );
@@ -207,7 +210,7 @@ begin
             BLINK_COUNT => 25_000_000 - 1 --quarter second sequence
         )
         port map(
-            winPatternEN     => gameWinEN,
+            winPatternEN     => winMode,
             reset            => reset,
             clock            => clock,
             leds             => leds,
@@ -246,8 +249,8 @@ begin
     );
 
     ------------------------------------------------------------------------------------
-    -- Process that increments score and speed with each successful win
-    ------------------------------------------------------------------------------------   
+    -- Process that increments score and speed with each win
+    ------------------------------------------------------------------------------------
     GAME_DRIVER : process (clock, reset)
     begin
         if reset = '1' then
@@ -269,7 +272,7 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    -- process that handles blinking the final score until reset happens
+    -- timer that handles blinking the final score until reset happens
     ------------------------------------------------------------------------------------
     LOSE_MODE_TIMER : process(clock, reset)
         variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;
@@ -282,16 +285,15 @@ begin
             if loseMode = '1' then
                 counter := counter + 1;
                 if (counter >= (MAX_TOGGLE_COUNT - 1)) then
-                    toggle := '0';
+                    toggle := not toggle;
                     counter := 0;
-
-                    if toggle = '1' then
-                        blanks <= "0011";
-                    elsif toggle = '0' then
-                        blanks <= "1111";
-                    end if;
-
                 end if;
+                if toggle = '1' then
+                    blanks <= "0011";
+                elsif toggle = '0' then
+                    blanks <= "1111";
+                end if;
+
             elsif loseMode = '0' then
                 counter := 0;
                 blanks <= "0011";
@@ -300,7 +302,39 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    --timer that handles the state machine to display the values of RNG_GENERATOR
+    -- timer that handles automatic start and level controlled win pattern
+    ------------------------------------------------------------------------------------
+    WIN_MODE_TIMER : process(clock, reset)
+        variable counter : integer range 0 to (2 * MAX_TOGGLE_COUNT) - 1;
+        variable latch : std_logic;
+    begin
+        if reset = '1' then
+            counter := 0;
+            latch := '0';
+            nextRoundEN <= '0';
+        elsif rising_edge(clock) then
+            nextRoundEN <= '0';
+            if gameWinEN = '1' then
+                latch := '1';
+            end if;
+
+            if latch = '1' then
+                winMode <= '1';
+                counter := counter + 1;
+                if (counter >= ((2 * MAX_TOGGLE_COUNT) - 1)) then
+                    latch := '0';
+                    counter := 0;
+                    nextRoundEN <= '1';
+                end if;
+            else
+                counter := 0;
+                winMode <= '0';
+            end if;
+        end if;
+    end process;
+
+    ------------------------------------------------------------------------------------
+    -- timer that handles the state machine to display the values of RNG_GENERATOR
     ------------------------------------------------------------------------------------
     DISPLAY_SM_TIMER : process(clock,reset)
         variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;

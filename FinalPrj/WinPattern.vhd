@@ -35,7 +35,7 @@ begin
         if reset = '1' then
             leds <= BLANK_LEDS;
         elsif rising_edge(clock) then
-           if displayMode = '1' then 
+            if winPatternEN = '1' then 
                 if toggle = '1' then
                     leds <= PATTERN0_LEDS;
                 elsif toggle = '0' then
@@ -49,48 +49,23 @@ begin
 
     DISPLAY_RATE: process(reset, clock)
         variable count: integer range 0 to BLINK_COUNT;
-        variable loopCounter : integer;
-        variable displayLatch : std_logic;
     begin
         if (reset = ACTIVE) then
-            displayMode <= '0';
-            displayLatch := '0';
             count := 0;
             winPatternIsBusy <= '0';
             toggle <=  not ACTIVE;
-            loopCounter := 0;
         elsif (rising_edge(clock)) then
             if winPatternEN = '1' then
-                displayMode <= '1';
-                displayLatch := '1';
-            end if;
-
-            if displayLatch = '1' then
-                if loopCounter >= 8 then
-                    displayMode <= '0';
-                    displayLatch := '0';
-                    winPatternIsBusy <= '0';
-                    loopCounter := 0;
+                if (count >= BLINK_COUNT) then
                     count := 0;
-                elsif loopCounter < 8 then
-                    displayMode <= '1';
-                    displayLatch := '1';
-                    winPatternIsBusy <= '1';
-                    if (count >= BLINK_COUNT) then
-                        count := 0;
-                        loopCounter := loopCounter + 1;
-                        toggle <= not toggle;
-                    else
-                        count := count + 1;
-                    end if;
+                    toggle <= not toggle;
+                else
+                    count := count + 1;
                 end if;
-            else
-                displayMode <= '0';
-                winPatternIsBusy <= '0';
-                loopCounter := 0;
+            else 
                 count := 0;
+                toggle <= not ACTIVE;
             end if;
-
         end if;
     end process DISPLAY_RATE;
 
