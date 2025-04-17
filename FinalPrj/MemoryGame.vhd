@@ -134,7 +134,7 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal number3 : std_logic_vector(3 downto 0);
     signal number4 : std_logic_vector(3 downto 0);
 
-    
+
     --signals for number checker
     signal readMode : std_logic;
     signal nextRoundEN : std_logic;
@@ -153,17 +153,18 @@ architecture MemoryGame_ARCH of MemoryGame is
 
     signal winPatternIsBusy : std_logic;
     signal losePatternIsBusy : std_logic;
-    
+
     signal outputNumber : std_logic_vector(3 downto 0);
     signal startControl : std_logic;
-    
+
     signal scoreVector : std_logic_vector(3 downto 0);
 
     signal SMTimer : integer;
 
+    signal loseMode : std_logic;
+
 begin
-    --startControl <= start and inputControl and (not winPatternIsBusy) and (not losePatternIsBusy);
-    startControl <= start and (not winPatternIsBusy) and (not losePatternIsBusy);
+    startControl <= start and readMode and (not winPatternIsBusy) and (not losePatternIsBusy);
     RNG_GENERATOR : component RandomNumbers port map(
         generateEN => startControl,
 
@@ -230,87 +231,77 @@ begin
         outputEN   => ledMode,
         leds       => leds
     );
-    
+
     scoreVector <= std_logic_vector(to_unsigned(score, 4));
     SCORE_NUMBER_BCD : BCD port map(
         binary4Bit  => scoreVector,
         decimalOnes => outputScore(3 downto 0),
         decimalTens => outputScore(7 downto 4)
     );
-    
+
     GAME_NUMBER_BCD : BCD port map(
             binary4Bit  => outputNumber,
             decimalOnes => outputGameNumber(3 downto 0),
             decimalTens => outputGameNumber(7 downto 4)
     );
-    
-    --TODO: increment the clock speed in this process
+
     ------------------------------------------------------------------------------------
-    -- Process that increments score with each successful win
+    -- Process that increments score and speed with each successful win
     ------------------------------------------------------------------------------------   
     GAME_DRIVER : process (clock, reset)
     begin
         if reset = '1' then
             score <= 0;
             countScaler <= 0;
+            loseMode <= '0';
         elsif rising_edge(clock) then
             if gameWinEN  = '1' then
                 score <= score + 1;
+                if countScaler <= 90_000_000 then
+                    countScaler <= countScaler + SCALE_AMOUNT;
+                end if;
             end if;
             if gameOverEN = '1' then
-                score <= 0;
+                countScaler <= 0;
+                loseMode <= '1';
             end if;
         end if;
     end process;
 
---    ------------------------------------------------------------------------------------
---    --
---    ------------------------------------------------------------------------------------
---    TPS_TOGGLER : process(clock, reset)
---        variable counter : integer range 0 to MAX_TOGGLE_COUNT; 
---    begin
---        if reset = '1' then
---            counter := 0;
---            tpsToggle <= '0';
---        elsif rising_edge(clock) then
---            if tpsModeControl = '1' then
---                counter := counter + 1;
---                if counter >= (MAX_TOGGLE_COUNT - countScaler) then
---                    tpsToggle <= not tpsToggle;
---                    counter := 0;
---                end if;
---            end if;
---            if tpsModeControl = '0' then
---                counter := 0;
---                tpsToggle <= '0';
---            end if;
---        end if;
---    end process;
---
---    ------------------------------------------------------------------------------------
---    --
---    ------------------------------------------------------------------------------------
---    TPS_TOGGLE_SHIFTER : process(clock, reset)
---    begin
---        if reset = '1' then
---            tpsToggleShift <= '0';
---        elsif rising_edge(clock) then
---            tpsToggleShift <= tpsToggle;
---        end if;
---    end process;
+    ------------------------------------------------------------------------------------
+    -- process that handles blinking the final score until reset happens
+    ------------------------------------------------------------------------------------
+    LOSE_MODE_TIMER : process(clock, reset)
+        variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;
+        variable toggle : std_logic;
+    begin
+        if reset = '1' then
+            counter := 0;
+            toggle := '0';
+        elsif rising_edge(clock) then
+            if loseMode = '1' then
+                counter := counter + 1;
+                if (counter >= (MAX_TOGGLE_COUNT - 1)) then
+                    toggle := '0';
+                    counter := 0;
 
---    ------------------------------------------------------------------------------------
---    -- The state register keeps the state machine synchronized with the clock.
---    ------------------------------------------------------------------------------------
---    DISPLAY_STATE_REG : process(clock, reset)
---    begin
---        if reset = '1' then
---            currentDisplayState <= IDLE;
---        elsif rising_edge(clock) then
---            currentDisplayState <= nextDisplayState;
---        end if;
---    end process;
+                    if toggle = '1' then
+                        blanks <= "0011";
+                    elsif toggle = '0' then
+                        blanks <= "1111";
+                    end if;
 
+                end if;
+            elsif loseMode = '0' then
+                counter := 0;
+                blanks <= "0011";
+            end if;
+        end if;
+    end process;
+
+    ------------------------------------------------------------------------------------
+    --timer that handles the state machine to display the values of RNG_GENERATOR
+    ------------------------------------------------------------------------------------
     DISPLAY_SM_TIMER : process(clock,reset)
         variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;
         variable countMode : std_logic;
@@ -326,7 +317,7 @@ begin
 
             if countMode = '1' then
                 counter := counter + 1;
-                if (counter >= (MAX_TOGGLE_COUNT - 1)) then
+                if (counter >= (MAX_TOGGLE_COUNT - countScaler - 1)) then
                     SMTimer <= SMTimer + 1;
                     counter := 0;
                 end if;
@@ -340,85 +331,85 @@ begin
                 countMode := '0';
                 counter := 0;
             end if;
-
         end if;
     end process;
+
     ------------------------------------------------------------------------------------
     -- State machine responsible for driving the main number output
     ------------------------------------------------------------------------------------
-    DISPLAY_SM : process(SMTimer, number0, number1, number2, number3, number4) is
+    DISPLAY_SM : process(SMTimer, number0, number1, number2, number3, number4, loseMode) is
     begin
         case (SMTimer) is
             ------------------------------------------------------------------BLANK
             when 0 =>
                 readMode <= '1';                --allow the start button to be pressed
                 ledMode <= '0';                 --deactivate leds
-                blanks <= "0011";               --deactivate segments
+--                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM1
             when 1 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
-                blanks <= (others => '0');      --activate segments
+--                blanks <= (others => '0');      --activate segments
                 outputNumber <= number0;
 
             ------------------------------------------------------------------BLANK
             when 2 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
-                blanks <= "0011";               --deactivate segments
+--                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM2
             when 3 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
-                blanks <= (others => '0');      --activate segments
+--                blanks <= (others => '0');      --activate segments
                 outputNumber <= number1;
 
             ------------------------------------------------------------------BLANK
             when 4 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
-                blanks <= "0011";               --deactivate segments
+--                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM3
             when 5 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
-                blanks <= (others => '0');      --activate segments
+--                blanks <= (others => '0');      --activate segments
                 outputNumber <= number2;
 
             ------------------------------------------------------------------BLANK
             when 6 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
-                blanks <= "0011";               --deactivate segments
+--                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM4
             when 7 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
-                blanks <= (others => '0');      --activate segments
+--                blanks <= (others => '0');      --activate segments
                 outputNumber <= number3;
 
             ------------------------------------------------------------------BLANK
             when 8 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
-                blanks <= "0011";               --deactivate segments
+--                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM5
             when 9 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
-                blanks <= (others => '0');      --activate segments
+--                blanks <= (others => '0');      --activate segments
                 outputNumber <= number4;
 
             ------------------------------------------------------------------DEFAULT
             when others =>
                 readMode <= '0';
                 ledMode <= '0';
-                blanks <= (others => '1');
+--                blanks <= (others => '1');
 
             end case;
     end process;
