@@ -53,33 +53,36 @@ begin
         variable displayLatch : std_logic;
     begin
         if (reset = ACTIVE) then
+            displayMode <= '0';
+            displayLatch := '0';
             count := 0;
+            winPatternIsBusy <= '0';
             toggle <=  not ACTIVE;
             loopCounter := 0;
-            displayLatch := '0';
         elsif (rising_edge(clock)) then
             if winPatternEN = '1' then
                 displayMode <= '1';
                 displayLatch := '1';
             end if;
 
-            if displayLatch = '1' then
-                winPatternIsBusy <= '1';
-                if (count >= BLINK_COUNT) then
-                    count := 0;
-                    loopCounter := loopCounter + 1;
-                    toggle <= not toggle;
-                else
-                    count := count + 1;
-                end if;
-            else
-                winPatternIsBusy <= '0';
-                count := 0;
-            end if;
-
             if loopCounter >= 8 then
                 displayMode <= '0';
                 displayLatch := '0';
+                winPatternIsBusy <= '0';
+                count := 0;
+            elsif loopCounter < 8 then
+                displayMode <= '1';
+                displayLatch := '1';
+                if displayLatch = '1' then
+                    winPatternIsBusy <= '1';
+                    if (count >= BLINK_COUNT) then
+                        count := 0;
+                        loopCounter := loopCounter + 1;
+                        toggle <= not toggle;
+                    else
+                        count := count + 1;
+                    end if;
+                end if;
             end if;
         end if;
     end process DISPLAY_RATE;

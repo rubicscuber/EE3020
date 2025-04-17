@@ -36,13 +36,13 @@ end entity MemoryGame;
 architecture MemoryGame_ARCH of MemoryGame is
 
     --this is subtracted from the toggling counter, making in toggle faster
-    signal countScaler : integer range 0 to 90_000; 
+    signal countScaler : integer range 0 to 90_000_000; 
 
     --the ammount added to count countScaler after each win
-    constant SCALE_AMOUNT : integer := 15_000;
+    constant SCALE_AMOUNT : integer := 15_000_000;
     
     --the absolute max rate that the numbers can flash
-    constant MAX_TOGGLE_COUNT : integer := 100_000;
+    constant MAX_TOGGLE_COUNT : integer := 100_000_000;
 
     component RandomNumbers is
         port(
