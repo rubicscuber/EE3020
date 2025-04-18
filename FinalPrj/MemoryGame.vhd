@@ -2,8 +2,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.Types_package.all; --TODO: remove types_package, only states needed are in the DISPLAY_STATE_MACHINE process
-
 ------------------------------------------------------------------------------------
 --Title: 
 --Name: Nathaniel Roberts, Mitch Walker
@@ -19,13 +17,12 @@ entity MemoryGame is
     port(
         switches : in std_logic_vector(15 downto 0);
         start : in std_logic;
-        
+
         clock : in std_logic;
         reset : in std_logic;
 
         leds : out std_logic_vector(15 downto 0);
 
-        outputGameNumber : out std_logic_vector(7 downto 0);
         outputScore : out std_logic_vector(7 downto 0);
 
         blanks : out std_logic_vector(3 downto 0)
@@ -40,9 +37,11 @@ architecture MemoryGame_ARCH of MemoryGame is
 
     --the ammount added to count countScaler after each win
     constant SCALE_AMOUNT : integer := 15_000_000;
-    
+
     --the absolute max rate that the numbers can flash
     constant MAX_TOGGLE_COUNT : integer := 100_000_000;
+
+    constant BLINK_COUNT : integer := 25_000_000;
 
     component RandomNumbers is
         port(
@@ -72,12 +71,9 @@ architecture MemoryGame_ARCH of MemoryGame is
 
             readMode    : in  std_logic;
 
-            gameState   : in  GameStates_t;
-
             clock       : in  std_logic;
             reset       : in  std_logic;
 
-            nextRoundEN : out std_logic;
             gameOverEN  : out std_logic;
             gameWinEN   : out std_logic
         );
@@ -86,11 +82,10 @@ architecture MemoryGame_ARCH of MemoryGame is
     component WinPattern
         generic(BLINK_COUNT : natural);
         port(
-            winPatternEN     : in  std_logic;
+            winPatternMode     : in  std_logic;
             reset            : in  std_logic;
             clock            : in  std_logic;
-            leds             : out std_logic_vector(15 downto 0);
-            winPatternIsBusy : out std_logic
+            leds             : out std_logic_vector(15 downto 0)
         );
     end component WinPattern;
 
@@ -121,11 +116,6 @@ architecture MemoryGame_ARCH of MemoryGame is
         );
     end component BCD;
 
-    --general signals for design
-    signal tpsToggle : std_logic;
-    signal tpsModeControl : std_logic;
-    signal tpsToggleShift : std_logic;
-
     --signals for RNG_GENERATOR
     signal readyEN : std_logic;
     signal number0 : std_logic_vector(3 downto 0);
@@ -133,7 +123,7 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal number2 : std_logic_vector(3 downto 0);
     signal number3 : std_logic_vector(3 downto 0);
     signal number4 : std_logic_vector(3 downto 0);
-
+    signal outputNumber : std_logic_vector(3 downto 0);
 
     --signals for number checker
     signal readMode : std_logic;
@@ -142,29 +132,23 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal gameWinEN : std_logic;
     signal ledMode : std_logic;
 
-    --game state signals
-    signal currentGameState : GameStates_t;
-
-    --display state signals
-    signal currentDisplayState : DisplayStates_t;
-    signal nextDisplayState : DisplayStates_t;
-
+    --score variable converted to vector later
     signal score : integer range 0 to 15;
-
-    signal winPatternIsBusy : std_logic;
-    signal losePatternIsBusy : std_logic;
-
-    signal outputNumber : std_logic_vector(3 downto 0);
-    signal startControl : std_logic;
-
     signal scoreVector : std_logic_vector(3 downto 0);
 
+    --level signal to make sure user cannot press the start button
+    --while the lose pattern is playing
+    signal losePatternIsBusy : std_logic;
+
+    --control signal for the RNG_GENERATOR
+    signal startControl : std_logic;
+
+    --This is effectively a timer controlled state signal
     signal SMTimer : integer;
 
+    --level controls for the win and lose patters
     signal loseMode : std_logic;
     signal winMode : std_logic;
-
-    signal dummySignal : std_logic;
 
 begin
     startControl <= (start and readMode and (not losePatternIsBusy)) or nextRoundEN;
@@ -183,8 +167,6 @@ begin
         number4    => number4
     );
 
-    currentGameState <= ROUND5;
-
     CHECK_NUMBERS : component NumberChecker port map(
         switches    => switches,
 
@@ -195,31 +177,28 @@ begin
         number4     => number4,
 
         readMode    => readMode,
-        gameState   => currentGameState, --TODO: change this port and change NumberChecker functionality
 
         clock       => clock,
         reset       => reset,
 
-        nextRoundEN => dummySignal,
         gameOverEN  => gameOverEN,
         gameWinEN   => gameWinEN
     );
     
     WIN_PATTERN_DRIVER : component WinPattern
         generic map(
-            BLINK_COUNT => 25_000_000 - 1 --quarter second sequence
+            BLINK_COUNT => BLINK_COUNT
         )
         port map(
-            winPatternEN     => winMode,
+            winPatternMode   => winMode,
             reset            => reset,
             clock            => clock,
-            leds             => leds,
-            winPatternIsBusy => winPatternIsBusy
+            leds             => leds
     );
     
     LOSE_PATTERN_DRRIVER : LosePattern
         generic map(
-            BLINK_COUNT => 25_000_000 - 1 --quarter second sequence
+            BLINK_COUNT => BLINK_COUNT
         )
         port map(
             losePatternEN     => gameOverEN,
@@ -242,11 +221,6 @@ begin
         decimalTens => outputScore(7 downto 4)
     );
 
-    GAME_NUMBER_BCD : BCD port map(
-            binary4Bit  => outputNumber,
-            decimalOnes => outputGameNumber(3 downto 0),
-            decimalTens => outputGameNumber(7 downto 4)
-    );
 
     ------------------------------------------------------------------------------------
     -- Process that increments score and speed with each win
@@ -378,74 +352,64 @@ begin
             when 0 =>
                 readMode <= '1';                --allow the start button to be pressed
                 ledMode <= '0';                 --deactivate leds
---                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM1
             when 1 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
---                blanks <= (others => '0');      --activate segments
                 outputNumber <= number0;
 
             ------------------------------------------------------------------BLANK
             when 2 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
---                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM2
             when 3 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
---                blanks <= (others => '0');      --activate segments
                 outputNumber <= number1;
 
             ------------------------------------------------------------------BLANK
             when 4 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
---                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM3
             when 5 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
---                blanks <= (others => '0');      --activate segments
                 outputNumber <= number2;
 
             ------------------------------------------------------------------BLANK
             when 6 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
---                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM4
             when 7 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
---                blanks <= (others => '0');      --activate segments
                 outputNumber <= number3;
 
             ------------------------------------------------------------------BLANK
             when 8 =>
                 readMode <= '0';
                 ledMode <= '0';                 --deactivate leds
---                blanks <= "0011";               --deactivate segments
 
             ------------------------------------------------------------------NUM5
             when 9 =>
                 readMode <= '0';
                 ledMode <= '1';                 --activate leds
---                blanks <= (others => '0');      --activate segments
                 outputNumber <= number4;
 
             ------------------------------------------------------------------DEFAULT
             when others =>
                 readMode <= '0';
                 ledMode <= '0';
---                blanks <= (others => '1');
 
-            end case;
+        end case;
+
     end process;
 
 end architecture MemoryGame_ARCH;

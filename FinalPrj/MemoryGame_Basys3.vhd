@@ -50,7 +50,6 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
             leds             : out std_logic_vector(15 downto 0);
 
-            outputGameNumber : out std_logic_vector(7 downto 0);
             outputScore      : out std_logic_vector(7 downto 0);
 
             blanks           : out std_logic_vector(3 downto 0)
@@ -127,8 +126,7 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     -------------------------------------------------------------------------------
     signal blanks : std_logic_vector(3 downto 0);
     signal outputScore : std_logic_vector(7 downto 0);
-    signal outputGameNumber : std_logic_vector(7 downto 0);
-    
+
 
     begin------------------------------------------------------------------------------begin
 
@@ -142,7 +140,6 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
         leds             => led,
 
-        outputGameNumber => outputGameNumber,
         outputScore      => outputScore,
         
         blanks           => blanks
@@ -157,8 +154,8 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
         digit3    => outputScore(7 downto 4),
         digit2    => outputScore(3 downto 0),
-        digit1    => outputGameNumber(7 downto 4),
-        digit0    => outputGameNumber(3 downto 0),
+        digit1    => "0000",
+        digit0    => "0000",
 
         blank3    => blanks(3),
         blank2    => blanks(2),

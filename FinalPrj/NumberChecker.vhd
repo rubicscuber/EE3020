@@ -39,14 +39,9 @@ entity NumberChecker is
 
         readMode : in std_logic;     -- pull this port low when there is displaying happening
 
-        gameState : in GameStates_t; -- tell this component how many numbers we need to check
-                                     -- this port could also just be a vector or anything that tells
-                                     -- NumberChecker what round we're on.
-
         clock : in std_logic;
         reset : in std_logic;
 
-        nextRoundEN : out std_logic;
         gameOverEN : out std_logic;
         gameWinEN : out std_logic
     );
@@ -91,167 +86,56 @@ begin
     num4 <= to_integer(unsigned(number4)) + 1;
 
 
-   CHECK_NUMBERS : process(clock, reset)
-    
-   begin
+    CHECK_NUMBERS : process(clock, reset)
+
+    begin
         if reset = '1' then
-            nextRoundEN <= '0';
             gameOverEN <= '0';
             gameWinEN <= '0';
             progressCounter <= 1;
         elsif rising_edge(clock) then
-            nextRoundEN <= '0';
             gameOverEN <= '0';
             gameWinEN <= '0';
 
-            -- based on the current round count, this structure will 
-            -- look sequentially at each user input. If at any point the 
-            -- user inputs a mismatch, the component throws a lose puse from
-            -- the GameOverEN pin.
-
-            -- if the user can make all correct entries, then the component throws 
-            -- a pulse from the nextRoundEN pin. If all numbers were correct, then
-            -- gameWinEN gets a pulse.
             if (readMode = '1') and (to_integer(unsigned(switches)) > 0) then
 
-                case gameState is
-                    when GAME_LOSE =>
-                        nextRoundEN <= '0';
-                        gameOverEN <= '0';
-                        gameWinEN <= '0';
-
-                    when GAME_WIN =>
-                        nextRoundEN <= '0';
-                        gameOverEN <= '0';
-                        gameWinEN <= '0';
-
-                    when WAIT_FOR_START =>
-                        nextRoundEN <= '0';
-                        gameOverEN <= '0';
-                        gameWinEN <= '0';
-
-                    when ROUND1 =>
-                        if compare = num0 then
-                            nextRoundEN <= '1';
-                        else
-                            gameOverEN <= '1';
-                        end if;
-
-                    when ROUND2 =>
-                        if progressCounter = 1 then
-                            if compare = num0 then
-                                progressCounter <= progressCounter + 1;
-                            else
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 2 then
-                            if compare = num1 then
-                                nextRoundEN <= '1';
-                                progressCounter <= 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        end if;
-
-                    when ROUND3 =>
-                        if progressCounter = 1 then
-                            if compare = num0 then
-                                progressCounter <= progressCounter + 1;
-                            else
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 2 then
-                            if compare = num1 then
-                                progressCounter <= progressCounter + 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 3 then
-                            if compare = num2 then
-                                nextRoundEN <= '1';
-                                progressCounter <=  1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        end if;
-
-                    when ROUND4 =>
-                        if progressCounter = 1 then
-                            if compare = num0 then
-                                progressCounter <= progressCounter + 1;
-                            else
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 2 then
-                            if compare = num1 then
-                                progressCounter <= progressCounter + 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 3 then
-                            if compare = num2 then
-                                progressCounter <=  progressCounter + 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 4 then
-                            if compare = num3 then
-                                nextRoundEN <= '1';
-                                progressCounter <=  1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        end if;
-
-                    when ROUND5 =>
-                        if progressCounter = 1 then
-                            if compare = num0 then
-                                progressCounter <= progressCounter + 1;
-                            else
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 2 then
-                            if compare = num1 then
-                                progressCounter <= progressCounter + 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 3 then
-                            if compare = num2 then
-                                progressCounter <=  progressCounter + 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 4 then
-                            if compare = num3 then
-                                progressCounter <=  progressCounter + 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        elsif progressCounter = 5 then
-                            if compare = num4 then
-                                gameWinEN <= '1';
-                                progressCounter <= 1;
-                            else 
-                                gameOverEN <= '1';
-                                progressCounter <= 1;
-                            end if;
-                        end if;
-
-                end case;
+                if progressCounter = 1 then
+                    if compare = num0 then
+                        progressCounter <= progressCounter + 1;
+                    else
+                        gameOverEN <= '1';
+                        progressCounter <= 1;
+                    end if;
+                elsif progressCounter = 2 then
+                    if compare = num1 then
+                        progressCounter <= progressCounter + 1;
+                    else 
+                        gameOverEN <= '1';
+                        progressCounter <= 1;
+                    end if;
+                elsif progressCounter = 3 then
+                    if compare = num2 then
+                        progressCounter <=  progressCounter + 1;
+                    else 
+                        gameOverEN <= '1';
+                        progressCounter <= 1;
+                    end if;
+                elsif progressCounter = 4 then
+                    if compare = num3 then
+                        progressCounter <=  progressCounter + 1;
+                    else 
+                        gameOverEN <= '1';
+                        progressCounter <= 1;
+                    end if;
+                elsif progressCounter = 5 then
+                    if compare = num4 then
+                        gameWinEN <= '1';
+                        progressCounter <= 1;
+                    else 
+                        gameOverEN <= '1';
+                        progressCounter <= 1;
+                    end if;
+                end if;
             end if;
         end if;
    end process;
