@@ -2,6 +2,18 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+------------------------------------------------------------------------------------
+--Title: WinPattern.vhd
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 
+--Prof: Scott Tippens
+--Desc: Win pattern generator
+--      This module handles drawing a specific win patternt to the 16 leds.
+--       
+--      When inactive, the leds are put into high impedace to avoid multiple driven nets
+--      
+------------------------------------------------------------------------------------
+
 entity WinPattern is
     generic(BLINK_COUNT : natural); --(100000000/4)-1;
     port(
@@ -27,6 +39,12 @@ architecture WinPattern_ARCH of WinPattern is
 
 begin
 
+    ------------------------------------------------------------------------------------
+    -- The if this module's WinPatternMode port is high then it will begin displaying
+    -- a shifing patter of leds. The toggle signal flips back and fourth between 
+    -- selecting one pattern or another. If this componenent is not selected, then
+    -- the output is in high impedance.
+    ------------------------------------------------------------------------------------
     WIN_SHIFT : process(clock, reset)
     begin
         if reset = '1' then
@@ -44,6 +62,9 @@ begin
         end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    -- This process handles how fast the toggle signal fill flip back and fourth.
+    ------------------------------------------------------------------------------------
     DISPLAY_RATE: process(reset, clock)
         variable count: integer range 0 to BLINK_COUNT;
     begin

@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 ----------------------------------------------------------------------------------
---Title: Lab_4_RandomNumbers
+--Title: RandomNumbers.vhd
 --Name: Nathaniel Roberts, Mitch Walker
 --Date: 3/26/25
 --Prof: Scott Tippens
@@ -20,6 +20,7 @@ use IEEE.NUMERIC_STD.ALL;
 --    to their corresponding randNum counter value. SET_RAND_NUM them sends 
 --    a pulsed signal through readyEN to signify that new random numbers 
 --    have been set
+--    Dependencies: RandCounter.vhd
 ----------------------------------------------------------------------------------
 
 entity RandomNumbers is

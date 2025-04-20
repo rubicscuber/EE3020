@@ -2,17 +2,21 @@ library IEEE;
 use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
-use work.Types_package.all;
-
-
 ------------------------------------------------------------------------------------
---Title: 
+--Title: MemoryGame
 --Name: Nathaniel Roberts, Mitch Walker
 --Date: 
 --Prof: Scott Tippens
 --Desc: Wrapper file
+--      
+--      This Top wrapper uses 3 generate statements for the array of 16 switches
+--      The first in the signal chain is a SynchronizerChain component to handle 
+--      meta stability. The second component debounces the switches and the final 
+--      component pulsees each switch.
+--      
+--      The same hardware signal chain exists for the start button.
+--      
 ------------------------------------------------------------------------------------
-
 
 entity MemoryGame_Basys3 is
     generic(

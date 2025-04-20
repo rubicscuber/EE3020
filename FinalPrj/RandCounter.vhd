@@ -3,7 +3,7 @@ use IEEE.STD_LOGIC_1164.ALL;
 use IEEE.NUMERIC_STD.ALL;
 
 ------------------------------------------------------------------------------------
---Title: Lab_4_RandomNumbers
+--Title: RandCounter.vhd
 --Name: Nathaniel Roberts, Mitch Walker
 --Date: 3/26/25
 --Prof: Scott Tippens

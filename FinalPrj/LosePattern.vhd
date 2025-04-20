@@ -2,21 +2,29 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+------------------------------------------------------------------------------------
+--Title: LosePattern.vhd
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 
+--Prof: Scott Tippens
+--Desc: Lose Pattern generator
+--      And overly complex desin in code to essentially display a draining health bar.
+--       
+--      Each pattern that is ouput to the leds is represented by a custom state.
+--      
+--      The state machine of this file switches through all 16 patterns at the rate of 
+--      once every 1/4 second
+------------------------------------------------------------------------------------
+
 entity LosePattern is
-    generic(BLINK_COUNT : natural); --(100000000/4)-1;
+    generic(BLINK_COUNT : natural); 
     port(
         
-        --this port may need to be a level control depending on if there 
-        --needs to be a set number of loops through this pattern
-        --in the case that this is a pulse, this component should ouput a busy 
-        --signal and have a set number of looping iterations of the pattern.
         losePatternEN : in std_logic; 
 
         reset: in std_logic;
         clock: in std_logic;
 
-        --the outputs of all these seperate pattern drivers MUST be multiplexed on the design diagram
-        --due to the fact that Z is not synthesizable on the fabric
         leds: out std_logic_vector(15 downto 0);
 
         losePatternIsBusy : out std_logic
@@ -71,6 +79,9 @@ begin
 
 
 
+    ------------------------------------------------------------------------------------
+    -- The state machine register that keeps track of when to switch to the next state.
+    ------------------------------------------------------------------------------------
     STATE_REGISTER: process(reset, clock)
         begin
             if reset = ACTIVE then
@@ -80,6 +91,11 @@ begin
             end if;
     end process;
 
+    ------------------------------------------------------------------------------------
+    -- The overly complex and long winded state machine that selects different signals
+    -- to reach the output. If this module is done, then the ouput is high-Z. While
+    -- this module runs, output a busy signal to tell the rest of the design it busy.
+    ------------------------------------------------------------------------------------
     WIN_PATTERN_SM: process(currentState, stateMachineControl, losePatternEN)
     begin
         case CurrentState is

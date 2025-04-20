@@ -2,8 +2,6 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.Types_package.all;
-
 ------------------------------------------------------------------------------------
 --Title: 
 --Name: Nathaniel Roberts, Mitch Walker

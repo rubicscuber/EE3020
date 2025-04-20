@@ -2,13 +2,12 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
-use work.types_package.all;
 ------------------------------------------------------------------------------------
 --Title: 
 --Name: Nathaniel Roberts, Mitch Walker
 --Date: 
 --Prof: Scott Tippens
---Desc: Number checker Testbench
+--Desc: Number checker Testbench : OUTDATED
 ------------------------------------------------------------------------------------
 
 entity NumberCheckerTB is
@@ -27,7 +26,6 @@ architecture Behavioral of NumberCheckerTB is
             number3     : in  std_logic_vector(3 downto 0);
             number4     : in  std_logic_vector(3 downto 0);
             readMode    : in  std_logic;
-            gameState   : in  GameStates_t;
             clock       : in  std_logic;
             reset       : in  std_logic;
             nextRoundEN : out std_logic;
@@ -46,7 +44,6 @@ architecture Behavioral of NumberCheckerTB is
     signal number3     :   std_logic_vector(3 downto 0);
     signal number4     :   std_logic_vector(3 downto 0);
     signal readMode    :   std_logic := '1';
-    signal gameState   :   GameStates_t := ROUND5;
     signal clock       :   std_logic := '1';
 
     signal reset       :   std_logic;
@@ -73,7 +70,6 @@ begin
             number3     => number3,
             number4     => number4,
             readMode    => readMode,
-            gameState   => gameState,
             clock       => clock,
             reset       => reset,
             nextRoundEN => nextRoundEN,

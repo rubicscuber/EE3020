@@ -2,6 +2,19 @@ library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
+------------------------------------------------------------------------------------
+--Title: Debouncer.vhd
+--Name: Nathaniel Roberts, Mitch Walker
+--Date: 
+--Prof: Scott Tippens
+--Desc: Counter based debouncing component.
+--      This component checks to see if the user input has remained in its position
+--      for the full duration of the count. If that signal input is different than the 
+--      output and the counter has also not yet reached its terminal value, then the 
+--      input is not yet stable and the component keeps the signal from reflecting to 
+--      the ouput.
+------------------------------------------------------------------------------------
+
 entity Debouncer is
     generic(
         DELAY_COUNT : positive
