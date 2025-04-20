@@ -32,17 +32,25 @@ end entity MemoryGame;
 
 architecture MemoryGame_ARCH of MemoryGame is
 
-    --this is subtracted from the toggling counter, making in toggle faster
+    ------------------------------------------------------------------------------------
+    --constants and progression signals
+    ------------------------------------------------------------------------------------
+    --this is subtracted from the toggling counter, making the blink faster
     signal countScaler : integer range 0 to 90_000_000; 
 
     --the ammount added to count countScaler after each win
     constant SCALE_AMOUNT : integer := 15_000_000;
 
-    --the absolute max rate that the numbers can flash
+    --the absolute max rate that the numbers can flash is once per second
+    --countScaler subtracts this down to make the display faster.
     constant MAX_TOGGLE_COUNT : integer := 100_000_000;
 
+    --1/4 second blinking rate for LosePattern, and WinPattern
     constant BLINK_COUNT : integer := 25_000_000;
 
+    ------------------------------------------------------------------------------------
+    --component definitions
+    ------------------------------------------------------------------------------------
     component RandomNumbers is
         port(
             generateEN : in  std_logic;
@@ -116,6 +124,9 @@ architecture MemoryGame_ARCH of MemoryGame is
         );
     end component BCD;
 
+    ------------------------------------------------------------------------------------
+    -- connecting signals
+    ------------------------------------------------------------------------------------
     --signals for RNG_GENERATOR
     signal readyEN : std_logic;
     signal number0 : std_logic_vector(3 downto 0);
@@ -151,6 +162,11 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal winMode : std_logic;
 
 begin
+
+
+    ------------------------------------------------------------------------------------
+    --random number generator component controlled by a combinational control signal
+    ------------------------------------------------------------------------------------
     startControl <= (start and readMode and (not losePatternIsBusy)) or nextRoundEN;
     RNG_GENERATOR : component RandomNumbers port map(
         generateEN => startControl,
@@ -167,6 +183,9 @@ begin
         number4    => number4
     );
 
+    ------------------------------------------------------------------------------------
+    -- number checker component that ouputs a pulse when all numbers intered are correct
+    ------------------------------------------------------------------------------------
     CHECK_NUMBERS : component NumberChecker port map(
         switches    => switches,
 
@@ -184,7 +203,10 @@ begin
         gameOverEN  => gameOverEN,
         gameWinEN   => gameWinEN
     );
-    
+
+    ------------------------------------------------------------------------------------
+    -- win pattern generator, mode controlled, outpus a pulse to start next round
+    ------------------------------------------------------------------------------------
     WIN_PATTERN_DRIVER : component WinPattern
         generic map(
             BLINK_COUNT => BLINK_COUNT
@@ -195,7 +217,11 @@ begin
             clock            => clock,
             leds             => leds
     );
-    
+
+    ------------------------------------------------------------------------------------
+    -- lose pattern generator, pulse controlled, 
+    -- ouputs a level control high if it is activley controlling the leds.
+    ------------------------------------------------------------------------------------
     LOSE_PATTERN_DRRIVER : LosePattern
         generic map(
             BLINK_COUNT => BLINK_COUNT
@@ -208,12 +234,18 @@ begin
             losePatternIsBusy => losePatternIsBusy
     );
 
+    ------------------------------------------------------------------------------------
+    -- handles writing the current random number to the 16 leds
+    ------------------------------------------------------------------------------------
     GAME_LED_DRIVER : BarLedDriver_Basys3 port map(
         binary4Bit => outputNumber,
         outputEN   => ledMode,
         leds       => leds
     );
 
+    ------------------------------------------------------------------------------------
+    -- code conversion component to change a binary number to BCD
+    ------------------------------------------------------------------------------------
     scoreVector <= std_logic_vector(to_unsigned(score, 4));
     SCORE_NUMBER_BCD : BCD port map(
         binary4Bit  => scoreVector,
@@ -276,7 +308,7 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    -- timer that handles automatic start and level controlled win pattern
+    -- timer that handles automatic start and level controll for the win pattern
     ------------------------------------------------------------------------------------
     WIN_MODE_TIMER : process(clock, reset)
         variable counter : integer range 0 to (2 * MAX_TOGGLE_COUNT) - 1;
@@ -343,7 +375,10 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    -- State machine responsible for driving the main number output
+    -- State machine responsible for multiplexing the random number to leds
+    -- in addition to writing control signals.
+    -- This state machine was designed this way to cut down dignificantly on the
+    -- unintentional latches of previous display state machine designs.
     ------------------------------------------------------------------------------------
     DISPLAY_SM : process(SMTimer, number0, number1, number2, number3, number4, loseMode) is
     begin
@@ -403,7 +438,7 @@ begin
                 ledMode <= '1';                 --activate leds
                 outputNumber <= number4;
 
-            ------------------------------------------------------------------DEFAULT
+            ----------------------------------------------------------DEFAULT case
             when others =>
                 readMode <= '0';
                 ledMode <= '0';

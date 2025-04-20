@@ -130,6 +130,10 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
     begin------------------------------------------------------------------------------begin
 
+    ------------------------------------------------------------------------------------
+    --component insantiations
+    ------------------------------------------------------------------------------------
+
     MEMORY_GAME : component MemoryGame port map(
         switches         => pulsedSwitches,
 
@@ -141,13 +145,10 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
         leds             => led,
 
         outputScore      => outputScore,
-        
+
         blanks           => blanks
     );
 
-    ------------------------------------------------------------------------------------
-    --component insantiations
-    ------------------------------------------------------------------------------------
     SEGMENT_DRIVER : component SevenSegmentDriver port map(
         reset     => btnD,
         clock     => clk,
@@ -210,9 +211,12 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
                 trigger  => debouncedSwitches(i),
                 pulseOut => pulsedSwitches(i) --all switches now pulse controlled
             );
-    end generate;        
+    end generate;
 
 
+    ------------------------------------------------------------------------------------
+    -- The following 3 components synchronize, debounce and pulse the start button.
+    ------------------------------------------------------------------------------------
     START_BUTTON_SYNC : SynchronizerChain
         generic map(
             CHAIN_SIZE => CHAIN_SIZE
@@ -242,5 +246,5 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
             trigger  => startButtonDebounced,
             pulseOut => startButtonPulsed --start button is now pulsed
     );
-    
+
 end MemoryGame_Basys3_ARCH;

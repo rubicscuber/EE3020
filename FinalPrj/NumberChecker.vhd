@@ -10,15 +10,8 @@ use work.Types_package.all;
 --Date: 
 --Prof: Scott Tippens
 --Desc: Number Checker component
---      The component needs information about the gameState, essentially, how many 
---      numbers are we currently trying to evaluate. 
---      
 --      The component will output a pulse on one of three pins to indicate if 
 --      the user made all the correct entries or made an error.
-
---      During the middle of the game, when 3 numbers for example, are entered correctly,
---      the component outputs a nextRoundEN pulse, to tell the rest of the design
---      that all the numbers have been entered and to start displaying 4 numbers now.
 
 --      When there are 5 numbers to check, the gameWinEN gets a pulse 
 --      if all are entered correctly.
@@ -29,7 +22,7 @@ use work.Types_package.all;
 
 entity NumberChecker is
     port(
-        switches : in std_logic_vector(15 downto 0); --the pulsed user inputs go here
+        switches : in std_logic_vector(15 downto 0); --the pulsed switch inputs go here
 
         number0 : in std_logic_vector(3 downto 0);
         number1 : in std_logic_vector(3 downto 0);
@@ -37,7 +30,7 @@ entity NumberChecker is
         number3 : in std_logic_vector(3 downto 0);
         number4 : in std_logic_vector(3 downto 0);
 
-        readMode : in std_logic;     -- pull this port low when there is displaying happening
+        readMode : in std_logic;     -- pull this port low when the display is used
 
         clock : in std_logic;
         reset : in std_logic;
@@ -86,8 +79,13 @@ begin
     num4 <= to_integer(unsigned(number4)) + 1;
 
 
+    ------------------------------------------------------------------------------------
+    -- Main number checker process:
+    -- procressCounter keeps track of which number needs to be checked
+    -- Each if statement will exit by pulling gameOverEN low if the numx mismatches compare
+    -- Inputs are ignored if no switches are active during any rising_edge()
+    ------------------------------------------------------------------------------------
     CHECK_NUMBERS : process(clock, reset)
-
     begin
         if reset = '1' then
             gameOverEN <= '0';
