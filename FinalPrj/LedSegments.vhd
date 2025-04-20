@@ -14,16 +14,16 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------------
 
 
-entity BarLedDriver_Basys3 is
+entity LedSegments is
     port(
         binary4Bit : in std_logic_vector(3 downto 0);
         outputEN : in std_logic;
 
         leds : out std_logic_vector(15 downto 0)
     );
-end entity BarLedDriver_Basys3;
+end entity LedSegments;
 
-architecture BarLedDriver_ARCH of BarLedDriver_Basys3 is
+architecture LedSegments_ARCH of LedSegments is
 
 begin
 
@@ -42,4 +42,4 @@ begin
         end if;
     end process;
 
-end architecture BarLedDriver_ARCH;
+end architecture LedSegments_ARCH;

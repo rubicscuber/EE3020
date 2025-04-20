@@ -8,9 +8,17 @@ use ieee.numeric_std.all;
 --Date: 
 --Prof: Scott Tippens
 --Desc: Memory Game design file
+--      This module contains the main operating instructions of the Memory game.
+--       
+--      To start the game a player must press the center push button.
+--      Then 5 seperate leds will light on the 16 wide led display once each second.
 --      
+--      They player must recall the order of the leds by fliping the coresponding 
+--      slide switch. Once all numbers were guessed correctly, a short victory patter
+--      lights, the score increments and the next round starts automatically.
 --      
---      
+--      Each successive round is faster than the last. The game ends at any point the
+--      player guesses the wrong number during their turn.
 ------------------------------------------------------------------------------------
 
 entity MemoryGame is
@@ -33,7 +41,7 @@ end entity MemoryGame;
 architecture MemoryGame_ARCH of MemoryGame is
 
     ------------------------------------------------------------------------------------
-    --constants and progression signals
+    --constants and status signals
     ------------------------------------------------------------------------------------
     --this is subtracted from the toggling counter, making the blink faster
     signal countScaler : integer range 0 to 90_000_000; 
@@ -108,13 +116,13 @@ architecture MemoryGame_ARCH of MemoryGame is
         );
     end component LosePattern;
 
-    component BarLedDriver_Basys3
+    component LedSegments
         port(
             binary4Bit : in  std_logic_vector(3 downto 0);
             outputEN   : in  std_logic;
             leds       : out std_logic_vector(15 downto 0)
         );
-    end component BarLedDriver_Basys3;
+    end component LedSegments;
 
     component BCD
         port(
@@ -127,7 +135,7 @@ architecture MemoryGame_ARCH of MemoryGame is
     ------------------------------------------------------------------------------------
     -- connecting signals
     ------------------------------------------------------------------------------------
-    --signals for RNG_GENERATOR
+    --Signals for RNG_GENERATOR
     signal readyEN : std_logic;
     signal number0 : std_logic_vector(3 downto 0);
     signal number1 : std_logic_vector(3 downto 0);
@@ -136,28 +144,28 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal number4 : std_logic_vector(3 downto 0);
     signal outputNumber : std_logic_vector(3 downto 0);
 
-    --signals for number checker
+    --Control signal for the RNG_GENERATOR
+    signal startControl : std_logic;
+
+    --Signals for CHECK_NUMBERS
     signal readMode : std_logic;
     signal nextRoundEN : std_logic;
     signal gameOverEN : std_logic;
     signal gameWinEN : std_logic;
     signal ledMode : std_logic;
 
-    --score variable converted to vector later
+    --Score represented as a integer and later converted to vector
     signal score : integer range 0 to 15;
     signal scoreVector : std_logic_vector(3 downto 0);
 
-    --level signal to make sure user cannot press the start button
+    --Level signal to make sure user cannot press the start button
     --while the lose pattern is playing
     signal losePatternIsBusy : std_logic;
 
-    --control signal for the RNG_GENERATOR
-    signal startControl : std_logic;
-
-    --This is effectively a timer controlled state signal
+    --Timer controlled state signal
     signal SMTimer : integer;
 
-    --level controls for the win and lose patters
+    --Level controls for the win and lose patters
     signal loseMode : std_logic;
     signal winMode : std_logic;
 
@@ -205,7 +213,7 @@ begin
     );
 
     ------------------------------------------------------------------------------------
-    -- win pattern generator, mode controlled, outpus a pulse to start next round
+    -- win pattern generator that is mode controlled, outpus a pulse to start next round
     ------------------------------------------------------------------------------------
     WIN_PATTERN_DRIVER : component WinPattern
         generic map(
@@ -219,7 +227,7 @@ begin
     );
 
     ------------------------------------------------------------------------------------
-    -- lose pattern generator, pulse controlled, 
+    -- lose pattern generator that is pulse controlled, 
     -- ouputs a level control high if it is activley controlling the leds.
     ------------------------------------------------------------------------------------
     LOSE_PATTERN_DRRIVER : LosePattern
@@ -235,9 +243,9 @@ begin
     );
 
     ------------------------------------------------------------------------------------
-    -- handles writing the current random number to the 16 leds
+    -- Takes a 4 bit binary word and converts to a positional 16 bit wide vector
     ------------------------------------------------------------------------------------
-    GAME_LED_DRIVER : BarLedDriver_Basys3 port map(
+    GAME_LED_DRIVER : LedSegments port map(
         binary4Bit => outputNumber,
         outputEN   => ledMode,
         leds       => leds
