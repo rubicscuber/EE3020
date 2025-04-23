@@ -316,23 +316,29 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    -- timer that handles automatic start and level controll for the win pattern
+    -- timer that handles automatic start and level controlled win pattern
     ------------------------------------------------------------------------------------
     WIN_MODE_TIMER : process(clock, reset)
         variable counter : integer range 0 to (2 * MAX_TOGGLE_COUNT) - 1;
         variable latch : std_logic;
+        variable godMode : std_logic;
     begin
         if reset = '1' then
             counter := 0;
             latch := '0';
             nextRoundEN <= '0';
+            godMode := '0';
         elsif rising_edge(clock) then
             nextRoundEN <= '0';
             if gameWinEN = '1' then
                 latch := '1';
+            elsif score = 15 then
+                godMode := '1';
             end if;
 
-            if latch = '1' then
+            if godMode = '1' then
+                winMode <= '1';
+            elsif latch = '1' then
                 winMode <= '1';
                 counter := counter + 1;
                 if (counter >= ((2 * MAX_TOGGLE_COUNT) - 1)) then
@@ -340,12 +346,16 @@ begin
                     counter := 0;
                     nextRoundEN <= '1';
                 end if;
-            else
+            elsif latch = '0' then
+                counter := 0;
+                winMode <= '0';
+            else 
                 counter := 0;
                 winMode <= '0';
             end if;
         end if;
     end process;
+
 
     ------------------------------------------------------------------------------------
     -- timer that handles the state machine to display the values of RNG_GENERATOR
