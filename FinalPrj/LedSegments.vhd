@@ -17,7 +17,7 @@ use ieee.numeric_std.all;
 entity LedSegments is
     port(
         binary4Bit : in std_logic_vector(3 downto 0);
-        outputEN : in std_logic;
+        outputMode : in std_logic;
 
         leds : out std_logic_vector(15 downto 0)
     );
@@ -27,9 +27,9 @@ architecture LedSegments_ARCH of LedSegments is
 
 begin
 
-    DRIVE_LEDS : process(binary4Bit, outputEN)
+    DRIVE_LEDS : process(binary4Bit, outputMode)
     begin
-        if outputEN = '0' then
+        if outputMode = '0' then
             leds <= (others => 'Z');
         else
             for i in 0 to 15 loop

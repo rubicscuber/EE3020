@@ -98,7 +98,7 @@ architecture MemoryGame_ARCH of MemoryGame is
     component WinPattern
         generic(BLINK_COUNT : natural);
         port(
-            winPatternMode     : in  std_logic;
+            winPatternMode   : in  std_logic;
             reset            : in  std_logic;
             clock            : in  std_logic;
             leds             : out std_logic_vector(15 downto 0)
@@ -159,7 +159,7 @@ architecture MemoryGame_ARCH of MemoryGame is
     signal scoreVector : std_logic_vector(3 downto 0);
 
     --Level signal to make sure user cannot press the start button
-    --while the lose pattern is playing
+    --while the lose pattern is playing.
     signal losePatternIsBusy : std_logic;
 
     --Timer controlled state signal
@@ -173,7 +173,7 @@ begin
 
 
     ------------------------------------------------------------------------------------
-    --random number generator component controlled by a combinational control signal
+    -- Random number generator component controlled by a combinational control signal
     ------------------------------------------------------------------------------------
     startControl <= (start and readMode and (not losePatternIsBusy)) or nextRoundEN;
     RNG_GENERATOR : component RandomNumbers port map(
@@ -182,6 +182,7 @@ begin
         clock      => clock,
         reset      => reset,
 
+        --------------outputs
         readyEN    => readyEN,
 
         number0    => number0,
@@ -192,7 +193,7 @@ begin
     );
 
     ------------------------------------------------------------------------------------
-    -- number checker component that ouputs a pulse when all numbers intered are correct
+    -- Number checker component that ouputs a pulse when all numbers intered are correct
     ------------------------------------------------------------------------------------
     CHECK_NUMBERS : component NumberChecker port map(
         switches    => switches,
@@ -208,12 +209,13 @@ begin
         clock       => clock,
         reset       => reset,
 
+        --------------outputs
         gameOverEN  => gameOverEN,
         gameWinEN   => gameWinEN
     );
 
     ------------------------------------------------------------------------------------
-    -- win pattern generator that is mode controlled, outpus a pulse to start next round
+    -- Win pattern generator that is mode controlled, outpus a pulse to start next round
     ------------------------------------------------------------------------------------
     WIN_PATTERN_DRIVER : component WinPattern
         generic map(
@@ -223,11 +225,13 @@ begin
             winPatternMode   => winMode,
             reset            => reset,
             clock            => clock,
+
+            --------------outputs
             leds             => leds
     );
 
     ------------------------------------------------------------------------------------
-    -- lose pattern generator that is pulse controlled, 
+    -- Lose pattern generator that is pulse controlled, 
     -- ouputs a level control high if it is activley controlling the leds.
     ------------------------------------------------------------------------------------
     LOSE_PATTERN_DRRIVER : LosePattern
@@ -238,32 +242,41 @@ begin
             losePatternEN     => gameOverEN,
             reset             => reset,
             clock             => clock,
+
+            --------------outputs
             leds              => leds,
             losePatternIsBusy => losePatternIsBusy
     );
 
     ------------------------------------------------------------------------------------
-    -- Takes a 4 bit binary word and converts to a positional 16 bit wide vector
+    -- Takes a 4 bit binary word and converts to a positional 16 bit wide vector for leds.
+    -- This component drives all leds to Z if the outputMode port is low.
     ------------------------------------------------------------------------------------
     GAME_LED_DRIVER : LedSegments port map(
         binary4Bit => outputNumber,
-        outputEN   => ledMode,
+        outputMode => ledMode, --if outputMode is low, then this output is (others => 'Z')
+
+        --------------outputs
         leds       => leds
     );
 
     ------------------------------------------------------------------------------------
-    -- code conversion component to change a binary number to BCD
+    -- Code conversion component to change a binary number to BCD
     ------------------------------------------------------------------------------------
     scoreVector <= std_logic_vector(to_unsigned(score, 4));
     SCORE_NUMBER_BCD : BCD port map(
         binary4Bit  => scoreVector,
+
+        --------------outputs
         decimalOnes => outputScore(3 downto 0),
         decimalTens => outputScore(7 downto 4)
     );
 
 
     ------------------------------------------------------------------------------------
-    -- Process that increments score and speed with each win
+    -- Process that increments score and speed with each win.
+    -- Whenever the gameOverEN signal pulses, the loseMode latch is set, which activates
+    -- the LOSE_MODE_TIMER process.
     ------------------------------------------------------------------------------------
     GAME_DRIVER : process (clock, reset)
     begin
@@ -286,7 +299,8 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    -- timer that handles blinking the final score until reset happens
+    -- Timer that handles blinking the final score until reset happens.
+    -- This process can only run the LosePattern module if loseMode was set by GAME_DRIVER.
     ------------------------------------------------------------------------------------
     LOSE_MODE_TIMER : process(clock, reset)
         variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;
@@ -316,7 +330,7 @@ begin
     end process;
 
     ------------------------------------------------------------------------------------
-    -- timer that handles automatic start and level controlled win pattern
+    --Timer that handles automatic start and level controlled win pattern.
     ------------------------------------------------------------------------------------
     WIN_MODE_TIMER : process(clock, reset)
         variable counter : integer range 0 to (2 * MAX_TOGGLE_COUNT) - 1;
@@ -329,6 +343,9 @@ begin
             nextRoundEN <= '0';
             godMode := '0';
         elsif rising_edge(clock) then
+
+            --Once the number checker component sends the gameWinEN pulse
+            --then the latch variable goes high. Same for the godMode latch.
             nextRoundEN <= '0';
             if gameWinEN = '1' then
                 latch := '1';
@@ -336,6 +353,8 @@ begin
                 godMode := '1';
             end if;
 
+            --Depending if one latch or another was set, then then
+            --mode controlled WinPattern component takes over the leds.
             if godMode = '1' then
                 winMode <= '1';
             elsif latch = '1' then
@@ -358,7 +377,7 @@ begin
 
 
     ------------------------------------------------------------------------------------
-    -- timer that handles the state machine to display the values of RNG_GENERATOR
+    --Timer that directs the display the values of RNG_GENERATOR.
     ------------------------------------------------------------------------------------
     DISPLAY_SM_TIMER : process(clock,reset)
         variable counter : integer range 0 to MAX_TOGGLE_COUNT - 1;
@@ -369,10 +388,16 @@ begin
             counter := 0;
             countMode := '0';
         elsif rising_edge(clock) then
+
+            --The readyEN pulse from the RNG_GENERATOR component will latch this
+            --internal variable high, enabling the next if statement.
             if readyEN = '1' then
                 countMode := '1'; --latch in and start counting
             end if;
 
+            --The counter variable reaches it's terminal value once each second.
+            --Each time the terminal value is reached, the SMTimer signal increments.
+            --After reaching that terminal value 9 times, it goes back to a steady state.
             if countMode = '1' then
                 counter := counter + 1;
                 if (counter >= (MAX_TOGGLE_COUNT - countScaler - 1)) then
@@ -404,62 +429,62 @@ begin
             ------------------------------------------------------------------BLANK
             when 0 =>
                 readMode <= '1';                --allow the start button to be pressed
-                ledMode <= '0';                 --deactivate leds
+                ledMode <= '0';                 --deactivate LedSegments component
 
             ------------------------------------------------------------------NUM1
             when 1 =>
                 readMode <= '0';
-                ledMode <= '1';                 --activate leds
+                ledMode <= '1';                 --activate LedSegments component
                 outputNumber <= number0;
 
             ------------------------------------------------------------------BLANK
             when 2 =>
                 readMode <= '0';
-                ledMode <= '0';                 --deactivate leds
+                ledMode <= '0';                 --deactivate LedSegments component
 
             ------------------------------------------------------------------NUM2
             when 3 =>
                 readMode <= '0';
-                ledMode <= '1';                 --activate leds
+                ledMode <= '1';                 --activate LedSegments component
                 outputNumber <= number1;
 
             ------------------------------------------------------------------BLANK
             when 4 =>
                 readMode <= '0';
-                ledMode <= '0';                 --deactivate leds
+                ledMode <= '0';                 --deactivate LedSegments component
 
             ------------------------------------------------------------------NUM3
             when 5 =>
                 readMode <= '0';
-                ledMode <= '1';                 --activate leds
+                ledMode <= '1';                 --activate LedSegments component
                 outputNumber <= number2;
 
             ------------------------------------------------------------------BLANK
             when 6 =>
                 readMode <= '0';
-                ledMode <= '0';                 --deactivate leds
+                ledMode <= '0';                 --deactivate LedSegments component
 
             ------------------------------------------------------------------NUM4
             when 7 =>
                 readMode <= '0';
-                ledMode <= '1';                 --activate leds
+                ledMode <= '1';                 --activate LedSegments component
                 outputNumber <= number3;
 
             ------------------------------------------------------------------BLANK
             when 8 =>
                 readMode <= '0';
-                ledMode <= '0';                 --deactivate leds
+                ledMode <= '0';                 --deactivate LedSegments component
 
             ------------------------------------------------------------------NUM5
             when 9 =>
                 readMode <= '0';
-                ledMode <= '1';                 --activate leds
+                ledMode <= '1';                 --activate LedSegments component
                 outputNumber <= number4;
 
             ----------------------------------------------------------DEFAULT case
             when others =>
                 readMode <= '0';
-                ledMode <= '0';
+                ledMode <= '0';                 --deactivate LedSegments component
 
         end case;
 
