@@ -2,11 +2,10 @@ GHDL=ghdl
 FLAGS="--std=08"
 
 all:
-	@$(GHDL) -a $(FLAGS) Types_package.vhd
 	@$(GHDL) -a $(FLAGS) LosePattern.vhd
 	@$(GHDL) -a $(FLAGS) RandomNumbers.vhd
 	@$(GHDL) -a $(FLAGS) RandCounter.vhd
-	@$(GHDL) -a $(FLAGS) BarLedDriver_Basys3.vhd
+	@$(GHDL) -a $(FLAGS) LedSegments.vhd
 	@$(GHDL) -a $(FLAGS) BCD.vhd
 	@$(GHDL) -a $(FLAGS) SevenSegmentDriver.vhd
 	@$(GHDL) -a $(FLAGS) SyncChain.vhd
@@ -27,11 +26,11 @@ all:
 
 #	@$(GHDL) -e $(FLAGS) NumberCheckerTB
 #	@$(GHDL) -e $(FLAGS) PatternTB
-#	@$(GHDL) -e $(FLAGS) MemoryGameTB
-	@$(GHDL) -e $(FLAGS) WrapperTB
+	@$(GHDL) -e $(FLAGS) MemoryGameTB
+#	@$(GHDL) -e $(FLAGS) WrapperTB
 
 #	@$(GHDL) -r $(FLAGS) NumberCheckerTB --wave=NumberCheckerWAVE.ghw --stop-time=1us
 #	@$(GHDL) -r $(FLAGS) PatternTB --wave=PatternWAVE.ghw --stop-time=1us
-#	@$(GHDL) -r $(FLAGS) MemoryGameTB --wave=MAIN_WAVE.ghw --stop-time=10us
-	@$(GHDL) -r $(FLAGS) WrapperTB --wave=WrapperWave.ghw --stop-time=15ms
+	@$(GHDL) -r $(FLAGS) MemoryGameTB --wave=MAIN_WAVE.ghw --stop-time=20us
+#	@$(GHDL) -r $(FLAGS) WrapperTB --wave=WrapperWave.ghw --stop-time=15ms
 

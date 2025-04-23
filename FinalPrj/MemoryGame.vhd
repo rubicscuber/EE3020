@@ -295,7 +295,7 @@ begin
         elsif rising_edge(clock) then
             if gameWinEN  = '1' then
                 score <= score + 1;
-                if countScaler <= 90_000_000 then
+                if countScaler <= MAX_COUNT_SCALER - 1 then
                     countScaler <= countScaler + SCALE_AMOUNT;
                 end if;
             end if;
