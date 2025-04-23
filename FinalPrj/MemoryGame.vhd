@@ -22,6 +22,12 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------------
 
 entity MemoryGame is
+    generic(
+        MAX_COUNT_SCALER : integer;
+        SCALE_AMOUNT : integer;
+        MAX_TOGGLE_COUNT : integer;
+        BLINK_COUNT : integer
+    );
     port(
         switches : in std_logic_vector(15 downto 0);
         start : in std_logic;
@@ -43,18 +49,20 @@ architecture MemoryGame_ARCH of MemoryGame is
     ------------------------------------------------------------------------------------
     --constants and status signals
     ------------------------------------------------------------------------------------
+    --constant MAX_COUNT_SCALER : integer := 90_000_000;
+
     --this is subtracted from the toggling counter, making the blink faster
-    signal countScaler : integer range 0 to 90_000_000; 
+    signal countScaler : integer range 0 to MAX_COUNT_SCALER; 
 
     --the ammount added to count countScaler after each win
-    constant SCALE_AMOUNT : integer := 15_000_000;
+    --constant SCALE_AMOUNT : integer := 15_000_000;
 
     --the absolute max rate that the numbers can flash is once per second
     --countScaler subtracts this down to make the display faster.
-    constant MAX_TOGGLE_COUNT : integer := 100_000_000;
+    --constant MAX_TOGGLE_COUNT : integer := 100_000_000;
 
     --1/4 second blinking rate for LosePattern, and WinPattern
-    constant BLINK_COUNT : integer := 25_000_000;
+    --constant BLINK_COUNT : integer := 25_000_000;
 
     ------------------------------------------------------------------------------------
     --component definitions
@@ -119,7 +127,7 @@ architecture MemoryGame_ARCH of MemoryGame is
     component LedSegments
         port(
             binary4Bit : in  std_logic_vector(3 downto 0);
-            outputEN   : in  std_logic;
+            outputMode : in  std_logic;
             leds       : out std_logic_vector(15 downto 0)
         );
     end component LedSegments;

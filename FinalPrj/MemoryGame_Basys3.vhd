@@ -20,9 +20,9 @@ use IEEE.numeric_std.all;
 
 entity MemoryGame_Basys3 is
     generic(
-        NUM_OF_SWITCHES : positive := 16;
-        CHAIN_SIZE : positive := 2;
-        DELAY_COUNT : positive := 10_000_000 --10ms on a 100MHz clock = 1M
+        NUM_OF_SWITCHES : integer := 16;
+        CHAIN_SIZE : integer := 2;
+        DELAY_COUNT : integer := 10_000_000 --10ms on a 100MHz clock = 1M
         );
     port(
         sw : in std_logic_vector(NUM_OF_SWITCHES-1 downto 0);
@@ -39,25 +39,25 @@ end entity;
 
 architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
 
-
     ------------------------------------------------------------------------------------
     --component definitions
     ------------------------------------------------------------------------------------
     component MemoryGame
-        port(
-            switches         : in  std_logic_vector(15 downto 0);
-
-            start            : in  std_logic;
-
-            clock            : in  std_logic;
-            reset            : in  std_logic;
-
-            leds             : out std_logic_vector(15 downto 0);
-
-            outputScore      : out std_logic_vector(7 downto 0);
-
-            blanks           : out std_logic_vector(3 downto 0)
+    	generic(
+    		MAX_COUNT_SCALER : integer;
+    		SCALE_AMOUNT     : integer;
+    		MAX_TOGGLE_COUNT : integer;
+    		BLINK_COUNT      : integer
         );
+    	port(
+    		switches    : in  std_logic_vector(15 downto 0);
+    		start       : in  std_logic;
+    		clock       : in  std_logic;
+    		reset       : in  std_logic;
+    		leds        : out std_logic_vector(15 downto 0);
+    		outputScore : out std_logic_vector(7 downto 0);
+    		blanks      : out std_logic_vector(3 downto 0)
+    	);
     end component MemoryGame;
 
     component SevenSegmentDriver is
@@ -138,7 +138,14 @@ architecture MemoryGame_Basys3_ARCH of MemoryGame_Basys3 is
     --component insantiations
     ------------------------------------------------------------------------------------
 
-    MEMORY_GAME : component MemoryGame port map(
+    MEMORY_GAME : component MemoryGame 
+        generic map(
+        	MAX_COUNT_SCALER => 90_000_000,
+        	SCALE_AMOUNT     => 15_000_000,
+        	MAX_TOGGLE_COUNT => 100_000_000,
+        	BLINK_COUNT      => 25_000_000
+        )
+    port map(
         switches         => pulsedSwitches,
 
         start            => startButtonPulsed,
