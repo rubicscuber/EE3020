@@ -31,6 +31,6 @@ all:
 
 #	@$(GHDL) -r $(FLAGS) NumberCheckerTB --wave=NumberCheckerWAVE.ghw --stop-time=1us
 #	@$(GHDL) -r $(FLAGS) PatternTB --wave=PatternWAVE.ghw --stop-time=1us
-	@$(GHDL) -r $(FLAGS) MemoryGameTB --wave=MAIN_WAVE.ghw --stop-time=20us
+	@$(GHDL) -r $(FLAGS) MemoryGameTB --wave=DesignWAVE.ghw --stop-time=55us
 #	@$(GHDL) -r $(FLAGS) WrapperTB --wave=WrapperWave.ghw --stop-time=15ms
 

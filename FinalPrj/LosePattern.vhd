@@ -99,6 +99,7 @@ begin
     WIN_PATTERN_SM: process(currentState, stateMachineControl, losePatternEN)
     begin
         case CurrentState is
+    -------------------------------------------------------------------------------BLANK
             when BLANK => 
                 leds <= HIGH_Z_LEDS;
                 losePatternIsBusy <= not ACTIVE;
@@ -107,6 +108,7 @@ begin
                 else
                     nextState <= BLANK;
                 end if;
+    ----------------------------------------------------------------------------PATTERN0
 
             when PATTERN0 =>
                 leds <= PATTERN0_LEDS;
@@ -116,6 +118,7 @@ begin
                 else
                     nextState <= PATTERN0;
                 end if;
+    -----------------------------------------------------------------------------PATTERN1
 
             when PATTERN1 =>
                 leds <= PATTERN1_LEDS;
@@ -125,6 +128,7 @@ begin
                 else
                     nextState <= PATTERN1;
                 end if;
+    -----------------------------------------------------------------------------PATTERN2
 
             when PATTERN2 =>
                 leds <= PATTERN2_LEDS;
@@ -134,6 +138,7 @@ begin
                 else
                     nextState <= PATTERN2;
                 end if;
+    -----------------------------------------------------------------------------PATTERN3
 
             when PATTERN3 =>
                 leds <= PATTERN3_LEDS;
@@ -143,6 +148,7 @@ begin
                 else
                     nextState <= PATTERN3;
                 end if;
+    -----------------------------------------------------------------------------PATTERN4
 
             when PATTERN4 =>
                 leds <= PATTERN4_LEDS;
@@ -152,6 +158,7 @@ begin
                 else
                     nextState <= PATTERN4;
                 end if;
+    -----------------------------------------------------------------------------PATTERN5
 
             when PATTERN5 =>
                 leds <= PATTERN5_LEDS;
@@ -161,6 +168,7 @@ begin
                 else
                     nextState <= PATTERN5;
                 end if;
+    -----------------------------------------------------------------------------PATTERN6
 
             when PATTERN6 =>
                 leds <= PATTERN6_LEDS;
@@ -170,6 +178,7 @@ begin
                 else
                     nextState <= PATTERN6;
                 end if;
+    -----------------------------------------------------------------------------PATTERN7
 
             when PATTERN7 =>
                 leds <= PATTERN7_LEDS;
@@ -179,6 +188,7 @@ begin
                 else
                     nextState <= PATTERN7;
                 end if;
+    -----------------------------------------------------------------------------PATTERN8
 
             when PATTERN8 =>
                 leds <= PATTERN8_LEDS;
@@ -188,6 +198,7 @@ begin
                 else
                     nextState <= PATTERN8;
                 end if;
+    -----------------------------------------------------------------------------PATTERN9
 
             when PATTERN9 =>
                 leds <= PATTERN9_LEDS;
@@ -197,6 +208,7 @@ begin
                 else
                     nextState <= PATTERN9;
                 end if;
+    -----------------------------------------------------------------------------PATTERN10
 
             when PATTERN10 =>
                 leds <= PATTERN10_LEDS;
@@ -206,6 +218,7 @@ begin
                 else
                     nextState <= PATTERN10;
                 end if;
+    -----------------------------------------------------------------------------PATTERN11
 
             when PATTERN11 =>
                 leds <= PATTERN11_LEDS;
@@ -215,6 +228,7 @@ begin
                 else
                     nextState <= PATTERN11;
                 end if;
+    -----------------------------------------------------------------------------PATTERN12
 
             when PATTERN12 =>
                 leds <= PATTERN12_LEDS;
@@ -224,6 +238,7 @@ begin
                 else
                     nextState <= PATTERN12;
                 end if;
+    -----------------------------------------------------------------------------PATTERN13
 
             when PATTERN13 =>
                 leds <= PATTERN13_LEDS;
@@ -233,6 +248,7 @@ begin
                 else
                     nextState <= PATTERN13;
                 end if;
+    -----------------------------------------------------------------------------PATTERN14
 
             when PATTERN14 =>
                 leds <= PATTERN14_LEDS;
@@ -242,6 +258,7 @@ begin
                 else
                     nextState <= PATTERN14;
                 end if;
+    -----------------------------------------------------------------------------PATTERN15
 
             when PATTERN15 =>
                 leds <= PATTERN15_LEDS;

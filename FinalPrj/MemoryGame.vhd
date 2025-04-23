@@ -3,7 +3,7 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ------------------------------------------------------------------------------------
---Title: 
+--Title: MemoryGame
 --Name: Nathaniel Roberts, Mitch Walker
 --Date: 
 --Prof: Scott Tippens

@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------------
 --Title: Debouncer.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 
+--Date: 4/23/25
 --Prof: Scott Tippens
 --Desc: Counter based debouncing component.
 --      This component checks to see if the user input has remained in its position
