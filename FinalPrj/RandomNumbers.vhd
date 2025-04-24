@@ -5,7 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 ----------------------------------------------------------------------------------
 --Title: RandomNumbers.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 3/26/25
+--Date: 4/24/25
 --Prof: Scott Tippens
 
 -- Description: Random Number Generator

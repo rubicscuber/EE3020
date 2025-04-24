@@ -3,9 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ------------------------------------------------------------------------------------
---Title: MemoryGame
+--Title: MemoryGame.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 
+--Date: 4/25/25
 --Prof: Scott Tippens
 --Desc: Memory Game design file
 --      This module contains the main operating instructions of the Memory game.

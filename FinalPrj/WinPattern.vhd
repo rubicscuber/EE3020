@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------------
 --Title: WinPattern.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 
+--Date: 4/25/25
 --Prof: Scott Tippens
 --Desc: Win pattern generator
 --      This module handles drawing a specific win patternt to the 16 leds.

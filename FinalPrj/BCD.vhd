@@ -3,9 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ------------------------------------------------------------------------------------
---Title: Lab_4_RandomNumbers
+--Title: BCD.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 3/26/25
+--Date: 4/25/25
 --Prof: Scott Tippens
 --Desc: Binary to BCD converter file.
 --      This component simply converts a 4 bit binary number into two seperate

@@ -3,9 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ------------------------------------------------------------------------------------
---Title: Memory Game
+--Title: MemoryGameTB.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 4/23/25
+--Date: 4/24/25
 --Prof: Scott Tippens
 --Desc: Memory Game testbench file
 --      This file uses seperate processes to find what the numerical display numbers

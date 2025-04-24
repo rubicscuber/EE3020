@@ -3,9 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ------------------------------------------------------------------------------------
---Title: Lab_4_RandomNumbers
+--Title: LedSegments.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 3/26/25
+--Date: 4/25/25
 --Prof: Scott Tippens
 --Desc: Bar Led Driver file
 --      This file simply chooses which led on the Basys3 board will recieve the active

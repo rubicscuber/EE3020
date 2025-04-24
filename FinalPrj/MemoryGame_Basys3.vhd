@@ -3,9 +3,9 @@ use IEEE.std_logic_1164.all;
 use IEEE.numeric_std.all;
 
 ------------------------------------------------------------------------------------
---Title: MemoryGame
+--Title: MemoryGame_Basys_3.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 4/23/25
+--Date: 4/25/25
 --Prof: Scott Tippens
 --Desc: Wrapper file
 --      

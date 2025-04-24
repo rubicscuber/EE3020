@@ -5,7 +5,7 @@ use ieee.numeric_std.all;
 ------------------------------------------------------------------------------------
 --Title: LosePattern.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 
+--Date: 4/25/25
 --Prof: Scott Tippens
 --Desc: Lose Pattern generator
 --      And overly complex desin in code to essentially display a draining health bar.

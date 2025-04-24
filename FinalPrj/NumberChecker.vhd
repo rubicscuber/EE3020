@@ -3,9 +3,9 @@ use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
 
 ------------------------------------------------------------------------------------
---Title: 
+--Title: NumberChecker.vhd
 --Name: Nathaniel Roberts, Mitch Walker
---Date: 
+--Date: 4/25/25
 --Prof: Scott Tippens
 --Desc: Number Checker component
 --      The component will output a pulse on one of three pins to indicate if 
