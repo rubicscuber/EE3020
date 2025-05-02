@@ -47,24 +47,6 @@ end entity MemoryGame;
 architecture MemoryGame_ARCH of MemoryGame is
 
     ------------------------------------------------------------------------------------
-    --constants and status signals
-    ------------------------------------------------------------------------------------
-    --constant MAX_COUNT_SCALER : integer := 90_000_000;
-
-    --this is subtracted from the toggling counter, making the blink faster
-    signal countScaler : integer range 0 to MAX_COUNT_SCALER; 
-
-    --the ammount added to count countScaler after each win
-    --constant SCALE_AMOUNT : integer := 15_000_000;
-
-    --the absolute max rate that the numbers can flash is once per second
-    --countScaler subtracts this down to make the display faster.
-    --constant MAX_TOGGLE_COUNT : integer := 100_000_000;
-
-    --1/4 second blinking rate for LosePattern, and WinPattern
-    --constant BLINK_COUNT : integer := 25_000_000;
-
-    ------------------------------------------------------------------------------------
     --component definitions
     ------------------------------------------------------------------------------------
     component RandomNumbers is
@@ -176,6 +158,10 @@ architecture MemoryGame_ARCH of MemoryGame is
     --Level controls for the win and lose patters
     signal loseMode : std_logic;
     signal winMode : std_logic;
+
+    --Counter register, once the display reaches this terminal value
+    --proceed to the next state
+    signal countScaler : integer range 0 to MAX_COUNT_SCALER; 
 
 begin
 
